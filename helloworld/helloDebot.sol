@@ -10,8 +10,9 @@ contract HelloDebot is Debot {
 
     /// @notice Entry point function for DeBot.
     function start() public override {
-        // print string and define callback function.
+        // print string to user.
         Terminal.print(0, "Hello, World!");
+        // input string from user and define callback that receives entered string.
         Terminal.input(tvm.functionId(setUserInput), "How is it going?", false);
     }
 
