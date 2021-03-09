@@ -39,7 +39,17 @@ TODO: give a link on instruction how to compile and link smart contract.
 
 Run `node SE`. (link to instrunction how to run node SE).
 
-Run `deploy_debot.sh` script.
+Run deploy script inside debot folder:
+
+    deploy_debot.sh
+
+### Deploy to net.ton.dev
+
+TODO: we need a giver or instruction where to take tokens before deploy.
+
+TODO: it can be a deploy_debot.sh script with special option for devnet
+
+    deploy_debot.sh dev
 
 ## How to Run
 
