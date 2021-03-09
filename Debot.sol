@@ -5,6 +5,8 @@ pragma AbiHeader pubkey;
 
 abstract contract Debot {
 
+    uint8 constant DEBOT_ABI = 1;
+
     uint8 m_options;
     optional(string) m_debotAbi;
     /// @notice Deprecated. For compatibility with old DEngine.
