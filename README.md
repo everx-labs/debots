@@ -13,9 +13,13 @@ Inteface specifications can be found here:
 
 ## Prerequisites
 
-Download `tonos-cli` version 0.8.1 or greater from here:
+Download [`tonos-cli`](https://github.com/tonlabs/tonos-cli) version 0.8.1 or greater from here:
 
-TODO: add links.
+TODO: change paths to 0.8.1 archive
+
+- `linux` http://sdkbinaries.tonlabs.io/tonos-cli-0_8_0-linux.zip
+- `macos` http://sdkbinaries.tonlabs.io/tonos-cli-0_8_0-darwin.zip
+- `windows` http://sdkbinaries.tonlabs.io/tonos-cli-0_8_0-windows.zip
 
 ## Debots
 
