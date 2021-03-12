@@ -57,7 +57,11 @@ npm install -g tondev
 
 # How to try DeBot
 
-You can start by trying out [`multisig`](https://github.com/tonlabs/debots/tree/main/multisig) DeBot. It's already deployed to [net.ton.dev](http://net.ton.dev) and can be called through `tonos-cli`:
+You can start by trying out [`multisig`](https://github.com/tonlabs/debots/tree/main/multisig) DeBot. It's already deployed to [net.ton.dev](http://net.ton.dev) and can be called through any DeBot browser that supports it.
+
+To try it out in TON Surf, go to https://beta.ton.surf/
+
+To try it out in `tonos-cli` call:
 
 ```bash
 ./tonos-cli --url net.ton.dev debot fetch 0:09403116d2d04f3d86ab2de138b390f6ec1b0bc02363dbf006953946e807051e
