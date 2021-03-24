@@ -17,7 +17,7 @@ contract HelloDebot is Debot {
     }
 
     /// @notice Returns Metadata about DeBot.
-    function getDebotInfo() public override view returns(
+    function getDebotInfo() public functionID(0xDEB) override view returns(
         string name, string version, string publisher, string key, string author,
         address support, string hello, string language, string dabi
     ) {

@@ -37,7 +37,7 @@ abstract contract Debot {
     /// @return hello String with first messsage with DeBot description.
     /// @return language (ISO-639) String with debot interface language, e.g. "en".
     /// @return dabi String with debot ABI.
-    function getDebotInfo() public view virtual returns(
+    function getDebotInfo() public functionID(0xDEB) view virtual returns(
         string name, string version, string publisher, string key, string author,
         address support, string hello, string language, string dabi);
 
