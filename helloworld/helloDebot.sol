@@ -17,18 +17,19 @@ contract HelloDebot is Debot {
     }
 
     /// @notice Returns Metadata about DeBot.
-    function getDebotInfo() public override view returns(DebotInfo info) {
-        info = DebotInfo({
-            name: "lloWorld",
-            version: "0.2.0",
-            publisher: "TON Labs",
-            key: "Start develop DeBot from here",
-            author: "TON Labs",
-            support: address.makeAddrStd(0, 0x841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94),
-            hello: "Hello, i'am a helloworld DeBot.",
-            language: "en",
-            dabi:m_debotAbi.get()
-        });
+    function getDebotInfo() public override view returns(
+        string name, string version, string publisher, string key, string author,
+        address support, string hello, string language, string dabi
+    ) {
+        name = "HelloWorld";
+        version = "0.2.0";
+        publisher = "TON Labs";
+        key = "Start develop DeBot from here";
+        author = "TON Labs";
+        support = address.makeAddrStd(0, 0x841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94);
+        hello = "Hello, i'am a helloworld DeBot.";
+        language = "en";
+        dabi = m_debotAbi.get();
     }
 
     function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
