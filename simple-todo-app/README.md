@@ -3,7 +3,7 @@
 This is an example of a simple TODO application. The application consists of two contracts:
 
 -   todoDebot.sol, contract of DeBot
--   todo.sol - smart contract containing TODO list
+-   todo.sol, smart contract containing TODO list
 
 ## Prerequisites
 
@@ -48,3 +48,7 @@ This is an example of a simple TODO application. The application consists of two
   or
   $ ./tonos-cli --url https://net.ton.dev debot fetch <address>
   ```
+
+## TODO
+
+  Encrypt data before saving to contract

@@ -86,7 +86,35 @@ contract TodoDebot is Debot {
     function createTask(uint32 index) public {
         Terminal.input(tvm.functionId(createTask_), "One line please:", false);
     }
-   
+ 
+    function createTask_(string value) public view {
+        optional(uint256) pubkey = 0;
+        ITodo(m_address).createTask{
+                abiVer: 2,
+                extMsg: true,
+                sign: true,
+                pubkey: pubkey,
+                time: uint64(now),
+                expire: 0,
+                callbackId: tvm.functionId(onSuccess),
+                onErrorId: tvm.functionId(onError)
+            }(value);
+    }
+  
+    function showTasks(uint32 index) public view {
+        optional(uint256) none;
+        ITodo(m_address).getTasks{
+            abiVer: 2,
+            extMsg: true,
+            sign: false,
+            pubkey: none,
+            time: uint64(now),
+            expire: 0,
+            callbackId: tvm.functionId(showTasks_),
+            onErrorId: 0
+        }();
+    }
+
     function showTasks_( Task[] tasks ) public {
         uint32 i;
         if (tasks.length > 0 ) {
@@ -107,12 +135,6 @@ contract TodoDebot is Debot {
         _menu();
     }
 
-    function updateTask_(string value) public {
-        (uint256 num,) = stoi(value);
-        m_taskId = uint32(num);
-        ConfirmInput.get(tvm.functionId(updateTask__),"Is this task completed?");
-    }
-
     function updateTask(uint32 index) public {
         if (m_stat.completeCount + m_stat.incompleteCount > 0) {
             Terminal.input(tvm.functionId(updateTask_), "Enter task number:", false);
@@ -121,6 +143,27 @@ contract TodoDebot is Debot {
             _menu();
         }
     }
+
+    function updateTask_(string value) public {
+        (uint256 num,) = stoi(value);
+        m_taskId = uint32(num);
+        ConfirmInput.get(tvm.functionId(updateTask__),"Is this task completed?");
+    }
+
+    function updateTask__(bool value) public view {
+        optional(uint256) pubkey = 0;
+        ITodo(m_address).updateTask{
+                abiVer: 2,
+                extMsg: true,
+                sign: true,
+                pubkey: pubkey,
+                time: uint64(now),
+                expire: 0,
+                callbackId: tvm.functionId(onSuccess),
+                onErrorId: tvm.functionId(onError)
+            }(m_taskId, value);
+    }
+
 
     function deleteTask(uint32 index) public {
         if (m_stat.completeCount + m_stat.incompleteCount > 0) {
@@ -131,6 +174,20 @@ contract TodoDebot is Debot {
         }
     }
 
+    function deleteTask_(string value) public view {
+        (uint256 num,) = stoi(value);
+        optional(uint256) pubkey = 0;
+        ITodo(m_address).deleteTask{
+                abiVer: 2,
+                extMsg: true,
+                sign: true,
+                pubkey: pubkey,
+                time: uint64(now),
+                expire: 0,
+                callbackId: tvm.functionId(onSuccess),
+                onErrorId: tvm.functionId(onError)
+            }(uint32(num));
+    }
 
     function leaveApp(uint32 index) public {
         Terminal.print(0, "Goodbye!");
@@ -148,63 +205,6 @@ contract TodoDebot is Debot {
             callbackId: answerId,
             onErrorId: 0
         }();
-    }
-
-    function createTask_(string value) public view {
-        optional(uint256) pubkey = 0;
-        ITodo(m_address).createTask{
-                abiVer: 2,
-                extMsg: true,
-                sign: true,
-                pubkey: pubkey,
-                time: uint64(now),
-                expire: 0,
-                callbackId: tvm.functionId(onSuccess),
-                onErrorId: tvm.functionId(onError)
-            }(value);
-    }
-
-    function showTasks(uint32 index) public view {
-        optional(uint256) none;
-        ITodo(m_address).getTasks{
-            abiVer: 2,
-            extMsg: true,
-            sign: false,
-            pubkey: none,
-            time: uint64(now),
-            expire: 0,
-            callbackId: tvm.functionId(showTasks_),
-            onErrorId: 0
-        }();
-    }
-
-    function updateTask__(bool value) public view {
-        optional(uint256) pubkey = 0;
-        ITodo(m_address).updateTask{
-                abiVer: 2,
-                extMsg: true,
-                sign: true,
-                pubkey: pubkey,
-                time: uint64(now),
-                expire: 0,
-                callbackId: tvm.functionId(onSuccess),
-                onErrorId: tvm.functionId(onError)
-            }(m_taskId, value);
-    }
-
-    function deleteTask_(string value) public view {
-        (uint256 num,) = stoi(value);
-        optional(uint256) pubkey = 0;
-        ITodo(m_address).deleteTask{
-                abiVer: 2,
-                extMsg: true,
-                sign: true,
-                pubkey: pubkey,
-                time: uint64(now),
-                expire: 0,
-                callbackId: tvm.functionId(onSuccess),
-                onErrorId: tvm.functionId(onError)
-            }(uint32(num));
     }
 
     // @notice Define DeBot version and title here.
