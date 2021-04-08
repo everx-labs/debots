@@ -28,6 +28,9 @@ This is an example of a simple TODO application. The application consists of two
   ```
   $ tondev se start
   $ ./deploy_contract.sh todo.tvc
+  ```
+  Remember this address, debot will ask it
+  ```
   $ ./deploy_debot.sh todoDebot.tvc
   ```
 
@@ -38,16 +41,20 @@ This is an example of a simple TODO application. The application consists of two
 
   ```
   $ ./deploy_contract.sh todo.tvc https://net.ton.dev
+  ```
+  Remember this address, debot will ask it
+  ```  
   $ ./deploy_debot.sh todoDebot.tvc  https://net.ton.dev
   ```
 
 ## Run DeBot
 
   ```
-  $ ./tonos-cli --url http://127.0.0.1 debot fetch <address>
+  $ tonos-cli --url http://127.0.0.1 debot fetch <address>
   or
-  $ ./tonos-cli --url https://net.ton.dev debot fetch <address>
+  $ tonos-cli --url https://net.ton.dev debot fetch <address>
   ```
+  When debot asks for keys, write "todo.keys.json"
 
 ## TODO
 
