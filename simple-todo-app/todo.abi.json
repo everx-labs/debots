@@ -1,0 +1,58 @@
+{
+	"ABI version": 2,
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "createTask",
+			"inputs": [
+				{"name":"text","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateTask",
+			"inputs": [
+				{"name":"id","type":"uint32"},
+				{"name":"done","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deleteTask",
+			"inputs": [
+				{"name":"id","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getTasks",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"text","type":"bytes"},{"name":"createdAt","type":"uint64"},{"name":"isDone","type":"bool"}],"name":"tasks","type":"tuple[]"}
+			]
+		},
+		{
+			"name": "getStat",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"stat","type":"tuple"}
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
