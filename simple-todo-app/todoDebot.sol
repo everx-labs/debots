@@ -8,7 +8,6 @@ import "../Terminal.sol";
 import "../Menu.sol";
 import "../AddressInput.sol";
 import "../ConfirmInput.sol";
-// import "../Sdk.sol";
 
 struct Task {
     uint32 id;
@@ -21,7 +20,7 @@ struct Stat {
     uint32 completeCount;
     uint32 incompleteCount;
 }
- 
+
 interface ITodo {
    function createTask(string text) external;
    function updateTask(uint32 id, bool done) external;
@@ -35,7 +34,6 @@ contract TodoDebot is Debot {
     address m_address; // TODO contract address
     Stat m_stat;       // Statistics of incompleted and completed tasks
     uint32 m_taskId;   // Task id for update. I didn't find a way to make this var local
- 
 
     function onError(uint32 sdkError, uint32 exitCode) public {
         Terminal.print(0, format("Operation failed. sdkError {}, exitCode {}", sdkError, exitCode));
@@ -46,7 +44,7 @@ contract TodoDebot is Debot {
         Terminal.print(0, "Transaction succeeded.");
         _getStat(tvm.functionId(setStat));
     }
-   
+
     function start() public override {
         AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
     }
@@ -63,30 +61,30 @@ contract TodoDebot is Debot {
 
     function _menu() private {
         string sep = '----------------------------------------';
-            Terminal.print(0, sep);
-            Menu.select(
-                format(
-                    "You have {}/{}/{} (todo/done/total) tasks", 
-                     m_stat.incompleteCount,
-                     m_stat.completeCount,
-                     m_stat.completeCount + m_stat.incompleteCount
-                ),
-                sep,
-                [
-                    MenuItem("Create new task","",tvm.functionId(createTask)),
-                    MenuItem("Show task list","",tvm.functionId(showTasks)),
-                    MenuItem("Update task status","",tvm.functionId(updateTask)),
-                    MenuItem("Delete task","",tvm.functionId(deleteTask)),
-                    MenuItem("Exit","",tvm.functionId(leaveApp))
-                ]
-            );
-            Terminal.print(0, "");
+        Terminal.print(0, sep);
+        Menu.select(
+            format(
+                "You have {}/{}/{} (todo/done/total) tasks",
+                    m_stat.incompleteCount,
+                    m_stat.completeCount,
+                    m_stat.completeCount + m_stat.incompleteCount
+            ),
+            sep,
+            [
+                MenuItem("Create new task","",tvm.functionId(createTask)),
+                MenuItem("Show task list","",tvm.functionId(showTasks)),
+                MenuItem("Update task status","",tvm.functionId(updateTask)),
+                MenuItem("Delete task","",tvm.functionId(deleteTask))
+            ]
+        );
+        Terminal.print(0, "");
     }
 
     function createTask(uint32 index) public {
+        index = index;
         Terminal.input(tvm.functionId(createTask_), "One line please:", false);
     }
- 
+
     function createTask_(string value) public view {
         optional(uint256) pubkey = 0;
         ITodo(m_address).createTask{
@@ -100,8 +98,9 @@ contract TodoDebot is Debot {
                 onErrorId: tvm.functionId(onError)
             }(value);
     }
-  
+
     function showTasks(uint32 index) public view {
+        index = index;
         optional(uint256) none;
         ITodo(m_address).getTasks{
             abiVer: 2,
@@ -118,7 +117,7 @@ contract TodoDebot is Debot {
     function showTasks_( Task[] tasks ) public {
         uint32 i;
         if (tasks.length > 0 ) {
-            Terminal.print(0, "You tasks list:");
+            Terminal.print(0, "Your tasks list:");
             for (i = 0; i < tasks.length; i++) {
                 Task task = tasks[i];
                 string completed;
@@ -130,12 +129,13 @@ contract TodoDebot is Debot {
                 Terminal.print(0, format("{} {}  \"{}\"  at {}", task.id, completed, task.text, task.createdAt));
             }
         } else {
-            Terminal.print(0, "You tasks list is empty");
+            Terminal.print(0, "Your tasks list is empty");
         }
         _menu();
     }
 
     function updateTask(uint32 index) public {
+        index = index;
         if (m_stat.completeCount + m_stat.incompleteCount > 0) {
             Terminal.input(tvm.functionId(updateTask_), "Enter task number:", false);
         } else {
@@ -166,6 +166,7 @@ contract TodoDebot is Debot {
 
 
     function deleteTask(uint32 index) public {
+        index = index;
         if (m_stat.completeCount + m_stat.incompleteCount > 0) {
             Terminal.input(tvm.functionId(deleteTask_), "Enter task number:", false);
         } else {
@@ -187,10 +188,6 @@ contract TodoDebot is Debot {
                 callbackId: tvm.functionId(onSuccess),
                 onErrorId: tvm.functionId(onError)
             }(uint32(num));
-    }
-
-    function leaveApp(uint32 index) public {
-        Terminal.print(0, "Goodbye!");
     }
 
     function _getStat(uint32 answerId) private view {

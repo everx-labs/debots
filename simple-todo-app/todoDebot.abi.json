@@ -114,14 +114,6 @@
 			]
 		},
 		{
-			"name": "leaveApp",
-			"inputs": [
-				{"name":"index","type":"uint32"}
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "getVersion",
 			"inputs": [
 			],
