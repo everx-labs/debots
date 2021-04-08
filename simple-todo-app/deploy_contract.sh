@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if [[ $1 != *".tvc"  ]] ; then 
+if [[ $1 != *".tvc"  ]] ; then
     echo "ERROR: contract file name .tvc required!"
     echo ""
     echo "USAGE:"
@@ -18,8 +18,8 @@ fi
 CONTRACT_NAME=${1%.*} # filename without extension
 NETWORK="${2:-http://127.0.0.1}"
 
-# NETWORK is passed as a parameter or you can hardcode it: 
-# NETWORK=https://net.ton.dev  
+# NETWORK is passed as a parameter or you can hardcode it:
+# NETWORK=https://net.ton.dev
 # NETWORK=https://main.ton.dev
 #
 
@@ -30,15 +30,15 @@ NETWORK="${2:-http://127.0.0.1}"
 GIVER_ADDRESS=0:b5e9240fc2d2f1ff8cbb1d1dee7fb7cae155e5f6320e585fcc685698994a19a5
 
 
-# Check if tonos-cli installed 
+# Check if tonos-cli installed
 tos=./tonos-cli
 if $tos --version > /dev/null 2>&1; then
     echo "OK $tos installed locally."
-else 
+else
     tos=tonos-cli
     if $tos --version > /dev/null 2>&1; then
         echo "OK $tos installed globally."
-    else 
+    else
         echo "$tos not found globally or in the current directory. Please install it and rerun script."
     fi
 fi
@@ -57,10 +57,6 @@ function get_address {
     echo $(cat $1.log | grep "Raw address:" | cut -d ' ' -f 3)
 }
 
-function get_pubkey {
-    echo $(cat $1.keys.json | grep "public" | cut -d '"' -f 4)
-}
-
 function genaddr {
     $tos genaddr $1.tvc $1.abi.json --genkey $1.keys.json > $1.log
 }
@@ -76,7 +72,7 @@ echo "Step 3. Deploying contract"
 $tos --url $NETWORK deploy $CONTRACT_NAME.tvc \
     --sign $CONTRACT_NAME.keys.json \
     --abi $CONTRACT_NAME.abi.json \
-    "{\"pubkey\":\"0x$(get_pubkey $CONTRACT_NAME)\"}" 
+    {}
 
 
 

@@ -3,21 +3,6 @@
 	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
-			"name": "constructor",
-			"inputs": [
-				{"name":"pubkey","type":"uint256"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "fn",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "createTask",
 			"inputs": [
 				{"name":"text","type":"bytes"}
@@ -56,6 +41,13 @@
 			],
 			"outputs": [
 				{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"stat","type":"tuple"}
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
 			]
 		}
 	],
