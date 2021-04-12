@@ -21,9 +21,6 @@ abstract contract Debot {
     /// @notice DeBot entry point.
     function start() public virtual;
 
-    /// @notice DeBot version and title.
-    function getVersion() public virtual returns (string name, uint24 semver);
-
     /// @notice Returns list of interfaces used by DeBot.
     function getRequiredInterfaces() public view virtual returns (uint256[] interfaces);
 

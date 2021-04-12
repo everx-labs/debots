@@ -6,6 +6,8 @@ Can be used as a template for new DeBots.
 
     tondev sol compile helloDebot.sol
 
+> Note: use TON-Solidity Compiler version 0.40.0 or higher.
+
 ## How to deploy to node SE
 
 Start node SE

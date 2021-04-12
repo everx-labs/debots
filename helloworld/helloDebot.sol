@@ -49,13 +49,4 @@ contract HelloDebot is Debot {
         Terminal.print(0, format("You have entered \"{}\"", value));
     }
 
-    // @notice Define DeBot version and title here.
-    function getVersion() public override returns (string name, uint24 semver) {
-        (name, semver) = ("HelloWorld DeBot", _version(0,1,0));
-    }
-
-    function _version(uint24 major, uint24 minor, uint24 fix) private pure inline returns (uint24) {
-        return (major << 16) | (minor << 8) | (fix);
-    }
-
 }

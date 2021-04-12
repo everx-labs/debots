@@ -52,15 +52,6 @@
 			]
 		},
 		{
-			"name": "getVersion",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"name","type":"bytes"},
-				{"name":"semver","type":"uint24"}
-			]
-		},
-		{
 			"name": "getDebotOptions",
 			"inputs": [
 			],
