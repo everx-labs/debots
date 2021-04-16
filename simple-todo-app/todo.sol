@@ -10,8 +10,8 @@ contract Todo {
      */
 
     modifier onlyOwner() {
-        // require(msg.pubkey() == tvm.pubkey(), 100);
         require(msg.pubkey() == m_ownerPubkey, 101);
+        require(m_ownerPubkey == msg.pubkey(), 101);
         _;
     }
 
@@ -36,7 +36,6 @@ contract Todo {
     constructor( uint256 pubkey) public {
         require(pubkey != 0, 120);
         tvm.accept();
-
         m_ownerPubkey = pubkey;
     }
 

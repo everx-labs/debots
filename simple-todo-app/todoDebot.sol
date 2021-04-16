@@ -44,10 +44,10 @@ interface ITodo {
 
 
 contract TodoDebot is Debot {
-    address m_address; // TODO contract address
-    Stat m_stat;       // Statistics of incompleted and completed tasks
-    uint32 m_taskId;   // Task id for update. I didn't find a way to make this var local
-    TvmCell m_todoCode;
+    TvmCell m_todoCode; // TODO contract code
+    address m_address;  // TODO contract address
+    Stat m_stat;        // Statistics of incompleted and completed tasks
+    uint32 m_taskId;    // Task id for update. I didn't find a way to make this var local
     uint256 m_masterPubKey;
 
 
@@ -69,17 +69,16 @@ contract TodoDebot is Debot {
     }
 
     function start() public override {
-        //        AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
         enterPublicKey();
     }
 
 
     function enterPublicKey() public {
-        Terminal.input(tvm.functionId(getPublicKey),"Please enter your public key",false);
+        Terminal.input(tvm.functionId(savePublicKey),"Please enter your public key",false);
     }
 
 
-    function getPublicKey(string value) public {
+    function savePublicKey(string value) public {
         uint res;
         bool status;
         (res, status) = stoi("0x"+value);
@@ -87,7 +86,7 @@ contract TodoDebot is Debot {
             m_masterPubKey = res;
             ConfirmInput.get(tvm.functionId(inputAddressOrDeployNew),"Do you already have TODO list?");
         } else {
-            Terminal.input(tvm.functionId(getPublicKey),"Wrong public key. Try again!\nPlease enter your public key",false);
+            Terminal.input(tvm.functionId(savePublicKey),"Wrong public key. Try again!\nPlease enter your public key",false);
         }
     }
 
@@ -102,41 +101,40 @@ contract TodoDebot is Debot {
     function deployNewTodoContract() public {
         TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
         m_address = address.makeAddrStd(0, tvm.hash(deployState));
-        Terminal.print(0,  format("Todo contract address is: {}",m_address));
 
-        AddressInput.get(tvm.functionId(creditAccount),"New TODO contract will be deployed, !# please enter your Wallet address");
+        Terminal.print(0, "New TODO contract with an initial balance of 0.1 will be deployed, please save its address:");
+        Terminal.print(0, format("{}",m_address));
+
+        AddressInput.get(tvm.functionId(creditAccount),"Select a wallet for payment");
     }
 
 
-    function creditAccount(address value) public {
+    function creditAccount(address value) public view {
         optional(uint256) pubkey = 0;
         TvmCell empty;
-        
         IMsig(value).sendTransaction{
             abiVer: 2,
             extMsg: true,
             sign: true,
-            pubkey: pubkey, // pubkey: none,
-            time: uint64(now), // time: 0,
+            pubkey: pubkey, 
+            time: uint64(now), 
             expire: 0,
-            callbackId: tvm.functionId(onDEWSuccess),
-            onErrorId: tvm.functionId(onError)
+            callbackId: tvm.functionId(deploy),
+            onErrorId: tvm.functionId(creditAccount)
         }(m_address, 200000000, false, 3, empty);
 
     }
 
-    function onDEWSuccess ()  public  {
-
-            Terminal.print(0,  format("Deploying contract to address: {}",m_address));
-
-
+    function deploy() public  {
+        Terminal.print(0, "wwww");
             TvmCell image = tvm.insertPubkey(m_todoCode, m_masterPubKey);
             optional(uint256) none;
+        Terminal.print(0, "2www");
             TvmCell deployMsg = tvm.buildExtMsg({
                 abiVer: 2,
                 dest: m_address,
                 callbackId: tvm.functionId(onSuccess),
-                onErrorId:  tvm.functionId(onDEWSuccess),  // cycle
+                onErrorId:  tvm.functionId(deploy),  // cycle
                 time: 0,
                 expire: 0,
                 sign: true,
@@ -146,16 +144,6 @@ contract TodoDebot is Debot {
             });
             tvm.sendrawmsg(deployMsg, 1);
     }
-
-
-
-
-
-
-
-
-
-
 
     function setStat(Stat stat) public {
         m_stat = stat;
