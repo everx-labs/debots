@@ -3,6 +3,14 @@
 	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
+			"name": "setTodoCode",
+			"inputs": [
+				{"name":"code","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "onError",
 			"inputs": [
 				{"name":"sdkError","type":"uint32"},
@@ -26,17 +34,66 @@
 			]
 		},
 		{
-			"name": "setStat",
+			"name": "savePublicKey",
 			"inputs": [
-				{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"stat","type":"tuple"}
+				{"name":"value","type":"bytes"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "enterTodoAddr",
+			"name": "checkStatus",
+			"inputs": [
+				{"name":"acc_type","type":"int8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "creditAccount",
 			"inputs": [
 				{"name":"value","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onErrorRepeatCredit",
+			"inputs": [
+				{"name":"sdkError","type":"uint32"},
+				{"name":"exitCode","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "waitBeforeDeploy",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "checkIfStatusIs0",
+			"inputs": [
+				{"name":"acc_type","type":"int8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onErrorRepeatDeploy",
+			"inputs": [
+				{"name":"sdkError","type":"uint32"},
+				{"name":"exitCode","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setStat",
+			"inputs": [
+				{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"stat","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -120,6 +177,14 @@
 			"outputs": [
 				{"name":"name","type":"bytes"},
 				{"name":"semver","type":"uint24"}
+			]
+		},
+		{
+			"name": "setCode",
+			"inputs": [
+				{"name":"newcode","type":"cell"}
+			],
+			"outputs": [
 			]
 		},
 		{

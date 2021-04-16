@@ -9,6 +9,7 @@ import "../Menu.sol";
 import "../AddressInput.sol";
 import "../ConfirmInput.sol";
 import "../Upgradable.sol";
+import "../Sdk.sol";
 
 struct Task {
     uint32 id;
@@ -32,7 +33,6 @@ abstract contract ATodo {
 }
 
 interface ITodo {
-
    function createTask(string text) external;
    function updateTask(uint32 id, bool done) external;
    function deleteTask(uint32 id) external;
@@ -41,14 +41,15 @@ interface ITodo {
 }
 
 
-
-
 contract TodoDebot is Debot {
     TvmCell m_todoCode; // TODO contract code
     address m_address;  // TODO contract address
     Stat m_stat;        // Statistics of incompleted and completed tasks
     uint32 m_taskId;    // Task id for update. I didn't find a way to make this var local
-    uint256 m_masterPubKey;
+    uint256 m_masterPubKey; // User pubkey
+    address m_msigAddress;  // User wallet address
+
+    uint32 INITIAL_BALANCE =  200000000;  // Initial TODO contract balance
 
 
     function setTodoCode(TvmCell code) public {
@@ -63,20 +64,13 @@ contract TodoDebot is Debot {
         _menu();
     }
 
-    function onSuccess() public {
-        Terminal.print(0, "Transaction succeeded.");
+    function onSuccess() public view {
         _getStat(tvm.functionId(setStat));
     }
 
     function start() public override {
-        enterPublicKey();
-    }
-
-
-    function enterPublicKey() public {
         Terminal.input(tvm.functionId(savePublicKey),"Please enter your public key",false);
     }
-
 
     function savePublicKey(string value) public {
         uint res;
@@ -84,57 +78,81 @@ contract TodoDebot is Debot {
         (res, status) = stoi("0x"+value);
         if (status) {
             m_masterPubKey = res;
-            ConfirmInput.get(tvm.functionId(inputAddressOrDeployNew),"Do you already have TODO list?");
+
+            Terminal.print(0, "Checking if you already have TODO list ...");
+            TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
+            m_address = address.makeAddrStd(0, tvm.hash(deployState));
+            Terminal.print(0, format( "Info: your TODO contract address is {}", m_address));
+            Sdk.getAccountType(tvm.functionId(checkStatus), m_address);
+
         } else {
             Terminal.input(tvm.functionId(savePublicKey),"Wrong public key. Try again!\nPlease enter your public key",false);
         }
     }
 
-    function inputAddressOrDeployNew(bool value) public {
-        if ( value ) {
-            AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
-        } else {
-            deployNewTodoContract();
+
+    function checkStatus(int8 acc_type) public {
+        if (acc_type == 1) { // acc is active and  contract is already deployed 
+            _getStat(tvm.functionId(setStat));
+
+        } else if (acc_type == -1)  { // acc is inactive
+            Terminal.print(0, "You don't have TODO list yet, so new contract with an initial balance of 0.2 will be deployed");
+            AddressInput.get(tvm.functionId(creditAccount),"Select a wallet for payment, we'll ask you to sign two transactions");
+
+        } else  if (acc_type == 0) { // acc is uninitialized
+            Terminal.print(0, format(
+                "Deploying new contract, if an error occured, check if your TODO contract has enough tokens on its balance"
+            ));
+            deploy();
+
+        } else if (acc_type == 2) {  // acc is frozen
+            Terminal.print(0, format("Account {} is frozen, send some tokens", m_address));
         }
     }
 
-    function deployNewTodoContract() public {
-        TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
-        m_address = address.makeAddrStd(0, tvm.hash(deployState));
 
-        Terminal.print(0, "New TODO contract with an initial balance of 0.1 will be deployed, please save its address:");
-        Terminal.print(0, format("{}",m_address));
-
-        AddressInput.get(tvm.functionId(creditAccount),"Select a wallet for payment");
-    }
-
-
-    function creditAccount(address value) public view {
+    function creditAccount(address value) public {
+        m_msigAddress = value;
         optional(uint256) pubkey = 0;
         TvmCell empty;
-        IMsig(value).sendTransaction{
+        IMsig(m_msigAddress).sendTransaction{
             abiVer: 2,
             extMsg: true,
             sign: true,
             pubkey: pubkey, 
             time: uint64(now), 
             expire: 0,
-            callbackId: tvm.functionId(deploy),
-            onErrorId: tvm.functionId(creditAccount)
-        }(m_address, 200000000, false, 3, empty);
-
+            callbackId: tvm.functionId(waitBeforeDeploy),
+            onErrorId: tvm.functionId(onErrorRepeatCredit)  // Just repeat if something went wrong
+        }(m_address, INITIAL_BALANCE, false, 3, empty);
     }
 
-    function deploy() public  {
-        Terminal.print(0, "wwww");
+    function onErrorRepeatCredit(uint32 sdkError, uint32 exitCode) public {
+        creditAccount(m_msigAddress);
+    }
+
+    
+    function waitBeforeDeploy() public  {
+        Sdk.getAccountType(tvm.functionId(checkIfStatusIs0), m_address);
+    }
+
+    function checkIfStatusIs0(int8 acc_type) public {
+        if (acc_type ==  0) {
+            deploy();
+        } else {
+            waitBeforeDeploy();
+        }
+    }
+
+
+    function deploy() private view {
             TvmCell image = tvm.insertPubkey(m_todoCode, m_masterPubKey);
             optional(uint256) none;
-        Terminal.print(0, "2www");
             TvmCell deployMsg = tvm.buildExtMsg({
                 abiVer: 2,
                 dest: m_address,
                 callbackId: tvm.functionId(onSuccess),
-                onErrorId:  tvm.functionId(deploy),  // cycle
+                onErrorId:  tvm.functionId(onErrorRepeatDeploy),    // Just repeat if something went wrong
                 time: 0,
                 expire: 0,
                 sign: true,
@@ -145,19 +163,19 @@ contract TodoDebot is Debot {
             tvm.sendrawmsg(deployMsg, 1);
     }
 
+    
+    function onErrorRepeatDeploy(uint32 sdkError, uint32 exitCode) public view {
+        deploy();
+    }
+
     function setStat(Stat stat) public {
         m_stat = stat;
         _menu();
     }
 
-    function enterTodoAddr(address value) public {
-        m_address = value;
-        _getStat(tvm.functionId(setStat));
-    }
-
     function _menu() private {
         string sep = '----------------------------------------';
-        Terminal.print(0, sep);
+        // Terminal.print(0, sep);
         Menu.select(
             format(
                 "You have {}/{}/{} (todo/done/total) tasks",
@@ -173,7 +191,6 @@ contract TodoDebot is Debot {
                 MenuItem("Delete task","",tvm.functionId(deleteTask))
             ]
         );
-        Terminal.print(0, "");
     }
 
     function createTask(uint32 index) public {
@@ -302,10 +319,21 @@ contract TodoDebot is Debot {
 
     // @notice Define DeBot version and title here.
     function getVersion() public override returns (string name, uint24 semver) {
-        (name, semver) = ("TODO DeBot", _version(0,1,0));
+        (name, semver) = ("TODO DeBot", _version(0,2,0));
     }
 
     function _version(uint24 major, uint24 minor, uint24 fix) private pure inline returns (uint24) {
         return (major << 16) | (minor << 8) | (fix);
     }
+
+	// Function that changes the code of current contract.
+	function setCode(TvmCell newcode) public view  {
+		require(msg.pubkey() == tvm.pubkey(), 102);
+		tvm.accept();
+		// Runtime function that creates an output action that would change this
+		// smart contract code to that given by cell newcode.
+		tvm.setcode(newcode);
+		// Runtime function that replaces current code of the contract with newcode.
+		tvm.setCurrentCode(newcode);
+	}
 }

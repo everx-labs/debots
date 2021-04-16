@@ -11,7 +11,6 @@ contract Todo {
 
     modifier onlyOwner() {
         require(msg.pubkey() == m_ownerPubkey, 101);
-        require(m_ownerPubkey == msg.pubkey(), 101);
         _;
     }
 
@@ -71,8 +70,8 @@ contract Todo {
 
         for((uint32 id, Task task) : m_tasks) {
             text = task.text;
-            createdAt = task.createdAt;
             isDone = task.isDone;
+            createdAt = task.createdAt;
             tasks.push(Task(id, text, createdAt, isDone));
        }
     }
