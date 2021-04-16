@@ -8,6 +8,7 @@ import "../Terminal.sol";
 import "../Menu.sol";
 import "../AddressInput.sol";
 import "../ConfirmInput.sol";
+import "../Upgradable.sol";
 
 struct Task {
     uint32 id;
@@ -21,7 +22,17 @@ struct Stat {
     uint32 incompleteCount;
 }
 
+interface IMsig {
+   function sendTransaction(address dest, uint128 value, bool bounce, uint8 flags, TvmCell payload  ) external;
+}     
+
+
+abstract contract ATodo {
+   constructor(uint256 pubkey) public {}
+}
+
 interface ITodo {
+
    function createTask(string text) external;
    function updateTask(uint32 id, bool done) external;
    function deleteTask(uint32 id) external;
@@ -30,10 +41,22 @@ interface ITodo {
 }
 
 
+
+
 contract TodoDebot is Debot {
     address m_address; // TODO contract address
     Stat m_stat;       // Statistics of incompleted and completed tasks
     uint32 m_taskId;   // Task id for update. I didn't find a way to make this var local
+    TvmCell m_todoCode;
+    uint256 m_masterPubKey;
+
+
+    function setTodoCode(TvmCell code) public {
+        require(msg.pubkey() == tvm.pubkey(), 101);
+        tvm.accept();
+        m_todoCode = code;
+    }
+
 
     function onError(uint32 sdkError, uint32 exitCode) public {
         Terminal.print(0, format("Operation failed. sdkError {}, exitCode {}", sdkError, exitCode));
@@ -46,8 +69,93 @@ contract TodoDebot is Debot {
     }
 
     function start() public override {
-        AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
+        //        AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
+        enterPublicKey();
     }
+
+
+    function enterPublicKey() public {
+        Terminal.input(tvm.functionId(getPublicKey),"Please enter your public key",false);
+    }
+
+
+    function getPublicKey(string value) public {
+        uint res;
+        bool status;
+        (res, status) = stoi("0x"+value);
+        if (status) {
+            m_masterPubKey = res;
+            ConfirmInput.get(tvm.functionId(inputAddressOrDeployNew),"Do you already have TODO list?");
+        } else {
+            Terminal.input(tvm.functionId(getPublicKey),"Wrong public key. Try again!\nPlease enter your public key",false);
+        }
+    }
+
+    function inputAddressOrDeployNew(bool value) public {
+        if ( value ) {
+            AddressInput.get(tvm.functionId(enterTodoAddr),"Enter your TODO contract address");
+        } else {
+            deployNewTodoContract();
+        }
+    }
+
+    function deployNewTodoContract() public {
+        TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
+        m_address = address.makeAddrStd(0, tvm.hash(deployState));
+        Terminal.print(0,  format("Todo contract address is: {}",m_address));
+
+        AddressInput.get(tvm.functionId(creditAccount),"New TODO contract will be deployed, !# please enter your Wallet address");
+    }
+
+
+    function creditAccount(address value) public {
+        optional(uint256) pubkey = 0;
+        TvmCell empty;
+        
+        IMsig(value).sendTransaction{
+            abiVer: 2,
+            extMsg: true,
+            sign: true,
+            pubkey: pubkey, // pubkey: none,
+            time: uint64(now), // time: 0,
+            expire: 0,
+            callbackId: tvm.functionId(onDEWSuccess),
+            onErrorId: tvm.functionId(onError)
+        }(m_address, 200000000, false, 3, empty);
+
+    }
+
+    function onDEWSuccess ()  public  {
+
+            Terminal.print(0,  format("Deploying contract to address: {}",m_address));
+
+
+            TvmCell image = tvm.insertPubkey(m_todoCode, m_masterPubKey);
+            optional(uint256) none;
+            TvmCell deployMsg = tvm.buildExtMsg({
+                abiVer: 2,
+                dest: m_address,
+                callbackId: tvm.functionId(onSuccess),
+                onErrorId:  tvm.functionId(onDEWSuccess),  // cycle
+                time: 0,
+                expire: 0,
+                sign: true,
+                pubkey: none,
+                stateInit: image,
+                call: {ATodo, m_masterPubKey}
+            });
+            tvm.sendrawmsg(deployMsg, 1);
+    }
+
+
+
+
+
+
+
+
+
+
 
     function setStat(Stat stat) public {
         m_stat = stat;

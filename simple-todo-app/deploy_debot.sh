@@ -28,6 +28,7 @@ NETWORK="${2:-http://127.0.0.1}"
 # This is TON OS SE giver address, correct it if you use another giver
 #
 GIVER_ADDRESS=0:b5e9240fc2d2f1ff8cbb1d1dee7fb7cae155e5f6320e585fcc685698994a19a5
+GIVER_ADDRESS=0:2bb4a0e8391e7ea8877f4825064924bd41ce110fce97e939d3323999e1efbb13
 
 
 # Check if tonos-cli installed 
@@ -78,5 +79,17 @@ $tos --url $NETWORK deploy $DEBOT_NAME.tvc "{}" \
 $tos --url $NETWORK call $DEBOT_ADDRESS setABI "{\"dabi\":\"$DEBOT_ABI\"}" \
     --sign $DEBOT_NAME.keys.json \
     --abi $DEBOT_NAME.abi.json 1>/dev/null
+
+
+todo_code=$(base64 -w 0 todo.tvc)
+
+$tos --url $NETWORK call $DEBOT_ADDRESS setTodoCode "{\"code\":\"$todo_code\"}" \
+    --sign $DEBOT_NAME.keys.json \
+    --abi $DEBOT_NAME.abi.json # 1>/dev/null
+
+
+
+#CLI_PATH/tonos-cli call $debot_address setFlexClientCode "{\"code\":\"$fc_code\"}" --sign $filenamekeys --abi $filenameabi
+
 
 echo "Done! Deployed debot with address: $DEBOT_ADDRESS"
