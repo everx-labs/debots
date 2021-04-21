@@ -1,3 +1,29 @@
+<p align="center"><a href="https://github.com/tonlabs/debots"><img src="assets/debot.jpg" height="60"/></a></p> 
+<h1 align="center">DeBots</h1>
+<p align="center">Next gen DApps where you don't need to develop your frontend</p>
+
+# Table of Content
+- [Table of Content](#table-of-content)
+- [What is a DeBot?](#what-is-a-debot)
+  - [Basic terms](#basic-terms)
+  - [DeBot interfaces](#debot-interfaces)
+- [Prerequisites](#prerequisites)
+- [DeBots](#debots)
+- [How to try DeBot](#how-to-try-debot)
+- [Write your first DeBot](#write-your-first-debot)
+  - [How to build DeBot](#how-to-build-debot)
+  - [How to deploy](#how-to-deploy)
+    - [Deploy to TON OS SE](#deploy-to-ton-os-se)
+- [How to Run](#how-to-run)
+  - [Run DeBot in Surf](#run-debot-in-surf)
+    - [DevNet](#devnet)
+    - [Free TON](#free-ton)
+  - [Run DeBot in tonos-cli](#run-debot-in-tonos-cli)
+    - [TON OS SE](#ton-os-se)
+    - [DevNet](#devnet-1)
+    - [Free TON](#free-ton-1)
+- [Further Reading](#further-reading)
+
 # What is a DeBot?
 
 DeBot (Decentralized Bot) is an intuitive, no-prior-knowledge-required interface for smart
@@ -94,9 +120,9 @@ tondev sol compile debot.sol
 
 ## How to deploy
 
-### Deploy to node SE
+### Deploy to TON OS SE
 
-Start [`node SE`](https://docs.ton.dev/86757ecb2/p/19d886-ton-os-se):
+Start [`TON OS SE`](https://docs.ton.dev/86757ecb2/p/19d886-ton-os-se):
 
     `tondev se start`
 
@@ -108,36 +134,36 @@ Run deploy script inside DeBot folder:
 deploy_debot.sh
 ```
 
-## How to Run
+# How to Run
 
-### Run DeBot in Surf
+## Run DeBot in Surf
 
-#### DevNet
+### DevNet
 
 Open link: `https://uri.ton.surf/debot?address=<address>&net=devnet`
 
-#### Free TON
+### Free TON
 
 Open link: `https://uri.ton.surf/debot?address=<address>`
 
 
-### Run DeBot in tonos-cli
+## Run DeBot in tonos-cli
 
-#### Run in node SE
+### TON OS SE
 
 ```bash
 ./tonos-cli --url http://127.0.0.1 debot fetch <address>
 
 ```
 
-#### Run in net.ton.dev
+### DevNet
 
 ```bash
 ./tonos-cli --url net.ton.dev debot fetch <address>
 
 ```
 
-#### Run in mainnet
+### Free TON
 
 ```bash
 ./tonos-cli --url main.ton.dev debot fetch <address>
