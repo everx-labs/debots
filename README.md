@@ -140,11 +140,11 @@ deploy_debot.sh
 
 ### DevNet
 
-Open link: `https://uri.ton.surf/debot?address=<address>&net=devnet`
+Open the link: `https://uri.ton.surf/debot?address=<address>&net=devnet`
 
 ### Free TON
 
-Open link: `https://uri.ton.surf/debot?address=<address>`
+Open the link: `https://uri.ton.surf/debot?address=<address>`
 
 
 ## Run DeBot in tonos-cli

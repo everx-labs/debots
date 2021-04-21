@@ -41,7 +41,7 @@ interface ITodo {
 }
 
 
-contract TodoDebot is Debot {
+contract TodoDebot is Debot, Upgradable {
     TvmCell m_todoCode; // TODO contract code
     address m_address;  // TODO contract address
     Stat m_stat;        // Statistics of incompleted and completed tasks
@@ -73,13 +73,11 @@ contract TodoDebot is Debot {
     }
 
     function savePublicKey(string value) public {
-        uint res;
-        bool status;
-        (res, status) = stoi("0x"+value);
+        (uint res, bool status) = stoi("0x"+value);
         if (status) {
             m_masterPubKey = res;
 
-            Terminal.print(0, "Checking if you already have TODO list ...");
+            Terminal.print(0, "Checking if you already have a TODO list ...");
             TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
             m_address = address.makeAddrStd(0, tvm.hash(deployState));
             Terminal.print(0, format( "Info: your TODO contract address is {}", m_address));
@@ -96,17 +94,17 @@ contract TodoDebot is Debot {
             _getStat(tvm.functionId(setStat));
 
         } else if (acc_type == -1)  { // acc is inactive
-            Terminal.print(0, "You don't have TODO list yet, so new contract with an initial balance of 0.2 will be deployed");
-            AddressInput.get(tvm.functionId(creditAccount),"Select a wallet for payment, we'll ask you to sign two transactions");
+            Terminal.print(0, "You don't have a TODO list yet, so a new contract with an initial balance of 0.2 tokens will be deployed");
+            AddressInput.get(tvm.functionId(creditAccount),"Select a wallet for payment. We will ask you to sign two transactions");
 
         } else  if (acc_type == 0) { // acc is uninitialized
             Terminal.print(0, format(
-                "Deploying new contract, if an error occured, check if your TODO contract has enough tokens on its balance"
+                "Deploying new contract. If an error occurs, check if your TODO contract has enough tokens on its balance"
             ));
             deploy();
 
         } else if (acc_type == 2) {  // acc is frozen
-            Terminal.print(0, format("Account {} is frozen, send some tokens", m_address));
+            Terminal.print(0, format("Can not continue: account {} is frozen", m_address));
         }
     }
 
@@ -175,7 +173,6 @@ contract TodoDebot is Debot {
 
     function _menu() private {
         string sep = '----------------------------------------';
-        // Terminal.print(0, sep);
         Menu.select(
             format(
                 "You have {}/{}/{} (todo/done/total) tasks",
@@ -326,14 +323,6 @@ contract TodoDebot is Debot {
         return (major << 16) | (minor << 8) | (fix);
     }
 
-	// Function that changes the code of current contract.
-	function setCode(TvmCell newcode) public view  {
-		require(msg.pubkey() == tvm.pubkey(), 102);
-		tvm.accept();
-		// Runtime function that creates an output action that would change this
-		// smart contract code to that given by cell newcode.
-		tvm.setcode(newcode);
-		// Runtime function that replaces current code of the contract with newcode.
-		tvm.setCurrentCode(newcode);
-	}
+    function onCodeUpgrade() internal override {}
+
 }

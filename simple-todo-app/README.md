@@ -12,20 +12,20 @@ This DeBot is already deployed on blockchain
 ### net.ton.dev
 DeBot address: 0:ba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552
 
-Open a link: https://uri.ton.surf/debot?address=0%3Aba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552&net=devnet
+Open the link: https://uri.ton.surf/debot?address=0%3Aba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552&net=devnet
 
-![](net.ton.dev.svg)
+![](../assets/net.ton.dev.svg)
 
 ### main.ton.dev.
 DeBot address: 0:73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36
 
-Open a link: https://uri.ton.surf/debot?address=0%3A73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36 
+Open the link: https://uri.ton.surf/debot?address=0%3A73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36 
 
-![](main.ton.dev.svg)
+![](../assets/main.ton.dev.svg)
 
--   On the first launch DeBot deploys TODO contract with initial balance = 0.2 Ruby, so you have a Surf wallet with positive balance.
+-   On the first launch DeBot deploys TODO contract with initial balance = 0.2 ton tokens, so you need to have a Surf wallet with positive balance.
 
--   DeeBot will ask for your public key every time you launch it. It's inconvenient, but inevitable for now.
+-   DeBot will ask for your public key every time you launch it. It's inconvenient, but inevitable for now.
 
 ## How to build
 
