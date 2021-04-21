@@ -110,21 +110,34 @@ deploy_debot.sh
 
 ## How to Run
 
-### Run in node SE
+### Run DeBot in Surf
+
+#### DevNet
+
+Open link: `https://uri.ton.surf/debot?address=<address>&net=devnet`
+
+#### Free TON
+
+Open link: `https://uri.ton.surf/debot?address=<address>`
+
+
+### Run DeBot in tonos-cli
+
+#### Run in node SE
 
 ```bash
 ./tonos-cli --url http://127.0.0.1 debot fetch <address>
 
 ```
 
-### Run in net.ton.dev
+#### Run in net.ton.dev
 
 ```bash
 ./tonos-cli --url net.ton.dev debot fetch <address>
 
 ```
 
-### Run in mainnet
+#### Run in mainnet
 
 ```bash
 ./tonos-cli --url main.ton.dev debot fetch <address>

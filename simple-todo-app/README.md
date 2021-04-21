@@ -12,13 +12,15 @@ This DeBot is already deployed on blockchain
 ### net.ton.dev
 DeBot address: 0:ba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552
 
-Open a link: https://uri.ton.surf/debot?address=0%3Aba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552&net=net.ton.dev or scan
+Open a link: https://uri.ton.surf/debot?address=0%3Aba06ea5c648ff6149e75a0a589becd827a2d959e42a34eb5e6ee29cb080bc552&net=devnet
+
 ![](net.ton.dev.svg)
 
 ### main.ton.dev.
 DeBot address: 0:73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36
 
-Open a link: https://uri.ton.surf/debot?address=0%3A73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36 or scan
+Open a link: https://uri.ton.surf/debot?address=0%3A73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36 
+
 ![](main.ton.dev.svg)
 
 -   On the first launch DeBot deploys TODO contract with initial balance = 0.2 Ruby, so you have a Surf wallet with positive balance.
@@ -63,39 +65,9 @@ if you use net.ton.dev:
 $ ./deploy_debot.sh todoDebot.tvc https://net.ton.dev
 ```
 
-## Run DeBot in the Surf (net.ton.dev)
+## Run DeBot 
 
-Open this link https://ton-surf-alpha.firebaseapp.com/debot?address=<your_debot_address>&net=devnet
-
-DeBot will ask you for your public key.
-
-## Run DeBot in the terminal
-
-1. Prepare file with you keys or seed phrase. You need it to sign transactions, e.g.:
-
-```
-$ cat todo.keys.json
-  {
-    "public": "8bd0i...3f",
-    "secret": "a3c46...96"
-  }
-```
-
-2. Run DeBot
-
-TON OS SE:
-
-```
-$ tonos-cli --url http://127.0.0.1 debot fetch <address>
-```
-
-net.ton.dev:
-
-```
-$ tonos-cli --url https://net.ton.dev debot fetch <address>
-```
-
-When debot asks you to sign transaction, write "todo.keys.json"
+Find instructions here: [How to try-DeBot](../README.md#how-to-try-debot)
 
 ## TODO
 
