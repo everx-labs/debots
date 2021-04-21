@@ -1,3 +1,25 @@
+<p align="center"><a href="https://github.com/tonlabs/debots"><img src="assets/debot.jpg" height="60"/></a></p> 
+<h1 align="center">DeBots</h1>
+<p align="center">Next gen DApps where you don't need to develop your frontend</p>
+
+# Table of content
+- [Table of content](#table-of-content)
+- [What is a DeBot?](#what-is-a-debot)
+  - [Basic terms](#basic-terms)
+  - [DeBot interfaces](#debot-interfaces)
+- [Prerequisites](#prerequisites)
+- [DeBots](#debots)
+- [How to try DeBot](#how-to-try-debot)
+- [Write your first DeBot](#write-your-first-debot)
+  - [How to build DeBot](#how-to-build-debot)
+  - [How to deploy](#how-to-deploy)
+    - [Deploy to node SE](#deploy-to-node-se)
+- [How to Run](#how-to-run)
+  - [Run in node SE](#run-in-node-se)
+  - [Run in Devnet](#run-in-devnet)
+  - [Run in Free TON](#run-in-free-ton)
+- [Further Reading](#further-reading)
+
 # What is a DeBot?
 
 DeBot (Decentralized Bot) is an intuitive, no-prior-knowledge-required interface for smart
@@ -108,23 +130,23 @@ Run deploy script inside DeBot folder:
 deploy_debot.sh
 ```
 
-## How to Run
+# How to Run
 
-### Run in node SE
+## Run in node SE
 
 ```bash
 ./tonos-cli --url http://127.0.0.1 debot fetch <address>
 
 ```
 
-### Run in net.ton.dev
+## Run in Devnet
 
 ```bash
 ./tonos-cli --url net.ton.dev debot fetch <address>
 
 ```
 
-### Run in mainnet
+## Run in Free TON
 
 ```bash
 ./tonos-cli --url main.ton.dev debot fetch <address>
