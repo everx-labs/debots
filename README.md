@@ -1,7 +1,6 @@
 <p align="center"><a href="https://github.com/tonlabs/debots"><img src="assets/debot.jpg" height="60"/></a></p> 
 <h1 align="center">DeBots</h1>
-<p align="center">Next gen DApps where you don't need to</p>
-<p align="center">develop your frontend</p>
+<p align="center">Next gen DApps where you don't need to develop your frontend</p>
 
 # Table of content
 - [Table of content](#table-of-content)
