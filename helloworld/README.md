@@ -6,9 +6,9 @@ Can be used as a template for new DeBots.
 
     tondev sol compile helloDebot.sol
 
-## How to deploy to node SE
+## How to deploy to TON OS SE
 
-Start node SE
+Start TON OS SE
 
     tondev se start
 
@@ -16,7 +16,7 @@ Deploy debot
 
     ./deploy_debot.sh
 
-## How to run in node SE
+## How to run in TON OS SE
 
     ./tonos-cli --url http://127.0.0.1 debot fetch <address>
 
