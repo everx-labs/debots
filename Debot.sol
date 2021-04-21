@@ -21,10 +21,25 @@ abstract contract Debot {
     /// @notice DeBot entry point.
     function start() public virtual;
 
-    /// @notice DeBot version and title.
-    function getVersion() public virtual returns (string name, uint24 semver);
+    /// @notice Returns list of interfaces used by DeBot.
+    function getRequiredInterfaces() public view virtual returns (uint256[] interfaces);
+
+    /// @notice Returns DeBot metadata.
+    /// @return name String with name of debot, e.g. "DePool".
+    /// @return version Semver version of debot, that will be converted to string like "x.y.z".
+    /// @return publisher String with info about who has deployed debot to blokchain, e.g. "TON Labs".
+    /// @return key (10-20 ch.) String with short description, e.g. "Work with Smthg".
+    /// @return author String with name of author of DeBot, e.g. "Ivan Ivanov".
+    /// @return support Free TON address of author for questions and donations.
+    /// @return hello String with first messsage with DeBot description.
+    /// @return language (ISO-639) String with debot interface language, e.g. "en".
+    /// @return dabi String with debot ABI.
+    function getDebotInfo() public functionID(0xDEB) view virtual returns(
+        string name, string version, string publisher, string key, string author,
+        address support, string hello, string language, string dabi, bytes icon);
 
     /// @notice Returns DeBot ABI.
+    /// Deprecated.
     function getDebotOptions() public view returns (uint8 options, string debotAbi, string targetAbi, address targetAddr) {
         debotAbi = m_debotAbi.hasValue() ? m_debotAbi.get() : "";
         targetAbi = m_targetAbi.hasValue() ? m_targetAbi.get() : "";

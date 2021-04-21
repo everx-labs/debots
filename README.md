@@ -170,6 +170,15 @@ Open the link: `https://uri.ton.surf/debot?address=<address>`
 
 ```
 
+### DEBUG Mode
+
+```bash
+./tonos-cli debot --debug fetch <address>
+
+```
+
+Note: debug mode generates a lot of terminal output.
+
 # Further Reading
 
 DeBot specifications can be found here: [https://docs.ton.dev/86757ecb2/p/72f1b7-debot-specifications](https://docs.ton.dev/86757ecb2/p/72f1b7-debot-specifications)
