@@ -1,4 +1,4 @@
-<p align="center"><a href="https://github.com/tonlabs/debots"><img src="assets/debot-circle.svg" height="60"/></a></p> 
+<p align="center"><a href="https://github.com/tonlabs/debots"><img src="assets/debot-circle.svg" height="60"/></a></p>
 <h1 align="center">DeBots</h1>
 <p align="center">Next gen DApps where you don't need to develop your frontend</p>
 
@@ -62,11 +62,7 @@ Every DInterface must be discussed and accepted by DeBot Interface Specification
 
 # Prerequisites
 
-Download [`tonos-cli`](https://github.com/tonlabs/tonos-cli) version 0.8.1 or greater from here:
-
-- `linux` [http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-linux.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-linux.zip)
-- `macos` [http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-darwin.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-darwin.zip)
-- `windows` [http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-windows.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-windows.zip)
+### tondev
 
 To build DeBots install [`tondev`](https://github.com/tonlabs/tondev):
 
@@ -74,6 +70,23 @@ To build DeBots install [`tondev`](https://github.com/tonlabs/tondev):
 npm install -g tondev
 ```
 
+### Tonos-cli
+
+To run and debug debots install [`tonos-cli`](https://github.com/tonlabs/tonos-cli):
+
+Note: minimal required version >= 0.11.4.
+
+Install using `tondev`:
+
+```bash
+tondev tonos-cli install
+```
+
+Or download binaries from here:
+
+- `linux` [http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-linux.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-linux.zip)
+- `macos` [http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-darwin.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-darwin.zip)
+- `windows` [http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-win32.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_11_4-win32.zip)
 
 
 # DeBots
