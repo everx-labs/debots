@@ -80,7 +80,7 @@ contract Todo {
         uint32 completeCount;
         uint32 incompleteCount;
 
-        for((uint32 id, Task task) : m_tasks) {
+        for((, Task task) : m_tasks) {
             if  (task.isDone) {
                 completeCount ++;
             } else {

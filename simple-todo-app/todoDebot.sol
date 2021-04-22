@@ -25,7 +25,7 @@ struct Stat {
 
 interface IMsig {
    function sendTransaction(address dest, uint128 value, bool bounce, uint8 flags, TvmCell payload  ) external;
-}     
+}
 
 
 abstract contract ATodo {
@@ -42,6 +42,8 @@ interface ITodo {
 
 
 contract TodoDebot is Debot, Upgradable {
+    bytes m_icon;
+
     TvmCell m_todoCode; // TODO contract code
     address m_address;  // TODO contract address
     Stat m_stat;        // Statistics of incompleted and completed tasks
@@ -72,6 +74,27 @@ contract TodoDebot is Debot, Upgradable {
         Terminal.input(tvm.functionId(savePublicKey),"Please enter your public key",false);
     }
 
+    /// @notice Returns Metadata about DeBot.
+    function getDebotInfo() public functionID(0xDEB) override view returns(
+        string name, string version, string publisher, string key, string author,
+        address support, string hello, string language, string dabi, bytes icon
+    ) {
+        name = "TODO DeBot";
+        version = "0.2.0";
+        publisher = "TON Labs";
+        key = "TODO list manager";
+        author = "TON Labs";
+        support = address.makeAddrStd(0, 0x66e01d6df5a8d7677d9ab2daf7f258f1e2a7fe73da5320300395f99e01dc3b5f);
+        hello = "Hi, i'm a TODO DeBot.";
+        language = "en";
+        dabi = m_debotAbi.get();
+        icon = m_icon;
+    }
+
+    function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
+        return [ Terminal.ID, Menu.ID, AddressInput.ID, ConfirmInput.ID ];
+    }
+
     function savePublicKey(string value) public {
         (uint res, bool status) = stoi("0x"+value);
         if (status) {
@@ -90,7 +113,7 @@ contract TodoDebot is Debot, Upgradable {
 
 
     function checkStatus(int8 acc_type) public {
-        if (acc_type == 1) { // acc is active and  contract is already deployed 
+        if (acc_type == 1) { // acc is active and  contract is already deployed
             _getStat(tvm.functionId(setStat));
 
         } else if (acc_type == -1)  { // acc is inactive
@@ -117,8 +140,8 @@ contract TodoDebot is Debot, Upgradable {
             abiVer: 2,
             extMsg: true,
             sign: true,
-            pubkey: pubkey, 
-            time: uint64(now), 
+            pubkey: pubkey,
+            time: uint64(now),
             expire: 0,
             callbackId: tvm.functionId(waitBeforeDeploy),
             onErrorId: tvm.functionId(onErrorRepeatCredit)  // Just repeat if something went wrong
@@ -126,10 +149,13 @@ contract TodoDebot is Debot, Upgradable {
     }
 
     function onErrorRepeatCredit(uint32 sdkError, uint32 exitCode) public {
+        // TODO: check errors if needed.
+        sdkError;
+        exitCode;
         creditAccount(m_msigAddress);
     }
 
-    
+
     function waitBeforeDeploy() public  {
         Sdk.getAccountType(tvm.functionId(checkIfStatusIs0), m_address);
     }
@@ -161,8 +187,11 @@ contract TodoDebot is Debot, Upgradable {
             tvm.sendrawmsg(deployMsg, 1);
     }
 
-    
+
     function onErrorRepeatDeploy(uint32 sdkError, uint32 exitCode) public view {
+        // TODO: check errors if needed.
+        sdkError;
+        exitCode;
         deploy();
     }
 
@@ -312,15 +341,6 @@ contract TodoDebot is Debot, Upgradable {
             callbackId: answerId,
             onErrorId: 0
         }();
-    }
-
-    // @notice Define DeBot version and title here.
-    function getVersion() public override returns (string name, uint24 semver) {
-        (name, semver) = ("TODO DeBot", _version(0,2,0));
-    }
-
-    function _version(uint24 major, uint24 minor, uint24 fix) private pure inline returns (uint24) {
-        return (major << 16) | (minor << 8) | (fix);
     }
 
     function onCodeUpgrade() internal override {
