@@ -323,6 +323,7 @@ contract TodoDebot is Debot, Upgradable {
         return (major << 16) | (minor << 8) | (fix);
     }
 
-    function onCodeUpgrade() internal override {}
-
+    function onCodeUpgrade() internal override {
+        tvm.resetStorage();
+    }
 }
