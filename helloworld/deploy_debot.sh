@@ -34,7 +34,8 @@ DEBOT_ADDRESS=$(get_address)
 echo ASK GIVER
 giver $DEBOT_ADDRESS
 DEBOT_ABI=$(cat $DEBOT_NAME.abi.json | xxd -ps -c 20000)
-ICON=$(cat hellodebot.png | xxd -ps -c 20000)
+ICON_BYTES=$(base64 -w 0 hellodebot.png)
+ICON=$(echo -n "data:image/png;base64,$ICON_BYTES" | xxd -ps -c 20000)
 
 echo DEPLOY DEBOT $DEBOT_ADDRESS
 ./tonos-cli --url $NETWORK deploy $DEBOT_NAME.tvc "{}" --sign $DEBOT_NAME.keys.json --abi $DEBOT_NAME.abi.json
