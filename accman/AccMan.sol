@@ -6,11 +6,12 @@ import "../Debot.sol";
 //import "../Terminal.sol";
 import "IMultisig.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/SigningBoxInput/SigningBoxInput.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/Menu/Menu.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/ConfirmInput/ConfirmInput.sol";
 import "IAccManCallbacks.sol";
-
-enum Status {
-    Success, IsNoRoot
-}
+import "../Sdk.sol";
+import "InviteRoot.sol";
+import "AccBase.sol";
 
 contract AccMan is Debot {
     bytes m_icon;
@@ -24,7 +25,8 @@ contract AccMan is Debot {
     TvmCell m_accountImage;
     uint256 m_ownerKey;
     address m_wallet;
-    TvMCell m_args;
+    TvmCell m_args;
+    uint32 m_sbHandle;
     uint16 m_currentSeqno;
 
     uint32 m_gotoId;
@@ -75,7 +77,7 @@ contract AccMan is Debot {
     }
 
     function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
-        return [ Terminal.ID ];
+        return [ Menu.ID, SigningBoxInput.ID ];
     }
 
     function invokeDeployAccount(
@@ -94,7 +96,7 @@ contract AccMan is Debot {
         calcSeqno();
     }
 
-    function _calcRoot() private returns (address) {
+    function _calcRoot() private view returns (address) {
         TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, m_ownerKey);
         return address(tvm.hash(rootImage));
     }
@@ -105,6 +107,7 @@ contract AccMan is Debot {
     }
 
     function menuCheckRoot(uint32 index) public {
+        index;
         checkRoot();
     }
 
@@ -124,9 +127,9 @@ contract AccMan is Debot {
         
     }
 
-    function createSelfInvite() public {
-        address account = address(buildAccount(m_ownerKey, m_currentSeqno));
-        ptional(uint256) pubkey = 0;
+    function createSelfInvite() public view {
+        address account = address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno)));
+        optional(uint256) pubkey = 0;
         optional(uint32) sbhandle = m_sbHandle;
         InviteRoot(_calcRoot()).createOwnerInvite{
             abiVer: 2,
@@ -150,7 +153,7 @@ contract AccMan is Debot {
     }
 
     function checkAccount() public {
-        address account = address(buildAccount(m_ownerKey, m_currentSeqno));
+        address account = address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno)));
         Sdk.getAccountCodeHash(tvm.functionId(checkHash), account);
     }
 
@@ -168,8 +171,8 @@ contract AccMan is Debot {
         createSelfInvite();
     }
 
-    function reportSuccess() public {
-        IAccManCallbacks(m_invoker).onAccountDeploy(Status.Success, address(buildAccount(m_ownerKey, m_currentSeqno)));
+    function reportSuccess() public view {
+        IAccManCallbacks(m_invoker).onAccountDeploy(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
     }
 
     function deployRoot(bool value) public {
@@ -184,7 +187,11 @@ contract AccMan is Debot {
     function calcSeqno() private {
         m_currentSeqno = 0;
         // TODO: introduce new type of invite - self, and query only selfinvites.
-        Sdk.getAccountsDataByHash(tvm.functionId(setResult), tvm.hash(buildInviteCode(1, _calcRoot())));
+        Sdk.getAccountsDataByHash(
+            tvm.functionId(setResult),
+            tvm.hash(buildInviteCode(1, _calcRoot())),
+            address.makeAddrStd(-1, 0)
+        );
     }
 
     function callMultisig(TvmCell payload, uint128 value, uint32 gotoId) public {
@@ -204,16 +211,23 @@ contract AccMan is Debot {
         }(address(this), value, true, false, payload);
     }
 
-    function onSuccess(uint64 transId) public {
+    function onSuccess(uint64 transId) public view {
+        transId;
         if (m_gotoId == tvm.functionId(checkRoot)) {
             this.checkRoot();
+        } else {
+            this.checkAccount();
         }
+    }
+
+    function onError(uint32 sdkError, uint32 exitCode) public {
+        // TODO: handle errors
     }
 
     function setResult(AccData[] accounts) public {
         uint16 counter = 0;
         for (uint i = 0; i < accounts.length; i++) {
-            uint256 pubkey = accounts.data.toSlice().decode(uint256);
+            uint256 pubkey = accounts[i].data.toSlice().decode(uint256);
             if (pubkey == m_ownerKey) {
                 counter++;
             }
@@ -229,7 +243,7 @@ contract AccMan is Debot {
 
     
 
-    function buildAccount(uint256 ownerKey, uint16 seqno) private returns (TvmCell image) {
+    function buildAccount(uint256 ownerKey, uint16 seqno) private view returns (TvmCell image) {
         TvmCell code = m_accountBaseImage.toSlice().loadRef();
         TvmCell newImage = tvm.buildStateInit({
             code: code,
@@ -241,7 +255,7 @@ contract AccMan is Debot {
         image = newImage;
     }
 
-    function buildInviteCode(uint8 inviteType, address inviteRoot) private returns (TvmCell) {
+    function buildInviteCode(uint8 inviteType, address inviteRoot) private view returns (TvmCell) {
         TvmBuilder saltBuilder;
         // uint8 (invite type) + address (invite root addr).
         saltBuilder.store(inviteType, inviteRoot);
