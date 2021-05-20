@@ -3,11 +3,11 @@ pragma AbiHeader expire;
 pragma AbiHeader time;
 pragma AbiHeader pubkey;
 import "../Debot.sol";
-//import "../Terminal.sol";
 import "IMultisig.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/SigningBoxInput/SigningBoxInput.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/Menu/Menu.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/ConfirmInput/ConfirmInput.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/Terminal/Terminal.sol";
 import "IAccManCallbacks.sol";
 import "../Sdk.sol";
 import "InviteRoot.sol";
@@ -80,6 +80,7 @@ contract AccMan is Debot {
         return [ Menu.ID, SigningBoxInput.ID ];
     }
 
+    /// @notice API function.
     function invokeDeployAccount(
         TvmCell image,
         uint256 ownerKey,
@@ -88,12 +89,47 @@ contract AccMan is Debot {
         TvmCell args
     ) public {
         m_invoker = msg.sender;
+        if (image.toSlice().empty()) {
+            returnOnDeployError(Status.EmptyAccount);
+            return;
+        }
+        if (ownerKey == 0) {
+            returnOnDeployError(Status.ZeroKey);
+            return;
+        }
+        if (sbHandle == 0) {
+            returnOnDeployError(Status.InvalidSigningBoxHandle);
+            return;
+        }
         m_ownerKey = ownerKey;
         m_accountImage = image;
         m_wallet = wallet;
         m_args = args;
         m_sbHandle = sbHandle;
         calcSeqno();
+    }
+
+    /// @notice API function.
+    function invokeQueryAccounts(
+        uint256 ownerKey
+    ) public {
+        m_invoker = msg.sender;
+        m_ownerKey = ownerKey;
+        Sdk.getAccountsDataByHash(
+            tvm.functionId(setInvites),
+            tvm.hash(buildInviteCode(1, _calcRoot())),
+            address.makeAddrStd(-1, 0)
+        );
+    }
+
+    function setInvites(AccData[] accounts) public view {
+        address[] addrs;
+        for (uint i = 0; i < accounts.length; i++) {
+            (, , , address acc) = accounts[i].data.toSlice().decode(uint256, uint64, bool, address);
+            addrs.push(acc);
+        }
+
+        IonQueryAccounts(m_invoker).onQueryAccounts(addrs);
     }
 
     function _calcRoot() private view returns (address) {
@@ -116,40 +152,48 @@ contract AccMan is Debot {
             string prompt; 
             if (m_deployInProgress) {
                 Menu.select("Waiting for the Invite Root deployment...", "", [ MenuItem("Check again", "", tvm.functionId(menuCheckRoot)) ]);
-                return;
             } else {
-                prompt = "AccMan needs to deploy Invite Root to manage your accounts (y/n)";
+                prompt = "AccMan needs to deploy Invite Root to manage your accounts";
                 ConfirmInput.get(tvm.functionId(deployRoot), prompt);
             }
+        } else {
+            Terminal.print(0, format("Your Invite Root is active: {}.", _calcRoot()));
+            this.signAccountCode();
         }
+    }
 
+    function signAccountCode() public {
         Sdk.signHash(tvm.functionId(setSignature), m_sbHandle, tvm.hash(m_accountImage.toSlice().loadRef()));
-        
     }
 
     function createSelfInvite() public view {
         address account = address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno)));
-        optional(uint256) pubkey = 0;
         optional(uint32) sbhandle = m_sbHandle;
         InviteRoot(_calcRoot()).createOwnerInvite{
             abiVer: 2,
             extMsg: true,
             sign: true,
-            pubkey: pubkey,
             time: 0,
             expire: 0,
             signBoxHandle: sbhandle,
             callbackId: tvm.functionId(reportSuccess),
-            onErrorId: tvm.functionId(onError)
+            onErrorId: tvm.functionId(onRootError)
         }(account);
     }
 
+    function onRootError(uint32 sdkError, uint32 exitCode) public {
+        // TODO: handle errors
+        Terminal.print(0, format("Error: sdk code = {}, exit code = {}", sdkError, exitCode));
+        returnOnDeployError(Status.RootFailed);
+    }
+
     function setSignature(bytes signature) public {
+        Terminal.print(0, "Deploying account...");
         TvmCell body = tvm.encodeBody(
             AccMan.deployAccount, m_ownerKey, m_currentSeqno, 
             m_accountImage.toSlice().loadRef(), signature, m_args
         );
-        callMultisig(body, 3 ton, tvm.functionId(checkAccount));
+        this.callMultisig(body, 3 ton, tvm.functionId(checkAccount));
     }
 
     function checkAccount() public {
@@ -167,12 +211,12 @@ contract AccMan is Debot {
             Menu.select("Waiting for the Account deployment...", "", [ MenuItem("Check again", "", tvm.functionId(menuCheckAccount)) ]);
             return;
         }
-
-        createSelfInvite();
+        Terminal.print(0, "Creating self invite...");
+        this.createSelfInvite();
     }
 
     function reportSuccess() public view {
-        IAccManCallbacks(m_invoker).onAccountDeploy(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
+        returnOnDeployStatus(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
     }
 
     function deployRoot(bool value) public {
@@ -181,7 +225,7 @@ contract AccMan is Debot {
         }
         TvmCell body = tvm.encodeBody(AccMan.deployInviteRoot, m_ownerKey);
         m_deployInProgress = true;
-        callMultisig(body, 1 ton, tvm.functionId(checkRoot));
+        callMultisig(body, 2 ton, tvm.functionId(checkRoot));
     }
 
     function calcSeqno() private {
@@ -198,7 +242,7 @@ contract AccMan is Debot {
         optional(uint256) pubkey = m_ownerKey;
         optional(uint32) sbhandle = m_sbHandle;
         m_gotoId = gotoId;
-        IMultisig(m_wallet).submitTransaction{
+        IMultisig(m_wallet).sendTransaction{
             abiVer: 2,
             extMsg: true,
             sign: true,
@@ -208,11 +252,10 @@ contract AccMan is Debot {
             signBoxHandle: sbhandle,
             callbackId: tvm.functionId(onSuccess),
             onErrorId: tvm.functionId(onError)
-        }(address(this), value, true, false, payload);
+        }(address(this), value, true, 2, payload);
     }
 
-    function onSuccess(uint64 transId) public view {
-        transId;
+    function onSuccess() public view {
         if (m_gotoId == tvm.functionId(checkRoot)) {
             this.checkRoot();
         } else {
@@ -222,6 +265,8 @@ contract AccMan is Debot {
 
     function onError(uint32 sdkError, uint32 exitCode) public {
         // TODO: handle errors
+        Terminal.print(0, format("Error: sdk code = {}, exit code = {}", sdkError, exitCode));
+        returnOnDeployError(Status.MultisigFailed);
     }
 
     function setResult(AccData[] accounts) public {
@@ -241,7 +286,13 @@ contract AccMan is Debot {
     // Helpers
     //
 
-    
+    function returnOnDeployStatus(Status status, address addr) internal view {
+        IAccManCallbacks(m_invoker).onAccountDeploy(status, addr);
+    }
+
+    function returnOnDeployError(Status status) internal view {
+        returnOnDeployStatus(status, address(0));
+    }
 
     function buildAccount(uint256 ownerKey, uint16 seqno) private view returns (TvmCell image) {
         TvmCell code = m_accountBaseImage.toSlice().loadRef();
@@ -272,13 +323,20 @@ contract AccMan is Debot {
     //
 
     function deployAccount(uint256 ownerKey, uint16 seqno, TvmCell code, bytes signature, TvmCell args) public {
+        require(msg.value >= 2 ton, 102);
         TvmCell state = buildAccount(ownerKey, seqno);
-        address account = new AccBase{value: 0, flag: 64, stateInit: state}();
-        AccBase(account).upgrade(code, signature, args);
+
+        address account = new AccBase{value: 1 ton, flag: 1, bounce: true, stateInit: state}();
+        AccBase(account).upgrade{value: 0, flag: 64, bounce: true}(code, signature, args);
     }
 
     function deployInviteRoot(uint256 ownerKey) public {
         TvmCell state = tvm.insertPubkey(m_inviteRootImage, ownerKey);
         new InviteRoot {value: 0, flag: 64, stateInit: state}(m_inviteImage);
     }
+
+    //
+    // Get-methods
+    //
+
 }

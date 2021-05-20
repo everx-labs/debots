@@ -3,12 +3,12 @@ pragma AbiHeader expire;
 pragma AbiHeader time;
 pragma AbiHeader pubkey;
 import "../Debot.sol";
-import "../Terminal.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/Terminal/Terminal.sol";
 import "AccMan.sol";
 import "IAccManCallbacks.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/AddressInput/AddressInput.sol";
 
-contract DeployerDebot is Debot, IAccManCallbacks {
+contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     bytes m_icon;
 
     address m_accman;
@@ -37,11 +37,35 @@ contract DeployerDebot is Debot, IAccManCallbacks {
 
     /// @notice Entry point function for DeBot.
     function start() public override {
+        Menu.select("I can manage your wallet accounts.", "", [
+            MenuItem("Deploy new account", "", tvm.functionId(menuDeployAccount)),
+            MenuItem("Show all your accounts", "", tvm.functionId(menuViewAccounts))
+        ]);
+        
+    }
+
+    function menuViewAccounts(uint32 index) public {
+        index;
+        if (m_ownerKey == 0) {
+            Terminal.input(tvm.functionId(setOwnerKey2), "Enter your public key:", false);
+        } else {
+            AccMan(m_accman).invokeQueryAccounts(m_ownerKey);
+        }
+    }
+
+    function setOwnerKey2(string value) public {
+        if (!_parseKey(value)) return;
+
+        AccMan(m_accman).invokeQueryAccounts(m_ownerKey);
+    }
+
+    function menuDeployAccount(uint32 index) public {
+        index;
         if (m_wallet == address(0)) {
-            AddressInput.get(tvm.functionId(setWalletAddress), "Enter multisig wallet address:");
+            AddressInput.get(tvm.functionId(setWalletAddress), "Choose multisig wallet which I can use to pay for account deployment:");
         }
         if (m_ownerKey == 0) {
-            Terminal.print(tvm.functionId(setOwnerKey), "Enter your public key:");
+            Terminal.input(tvm.functionId(setOwnerKey), "Enter your public key:", false);
         }
 
         if (m_ownerKey != 0 && m_wallet != address(0)) {
@@ -50,12 +74,7 @@ contract DeployerDebot is Debot, IAccManCallbacks {
     }
 
     function setOwnerKey(string value) public {
-        (uint256 key, bool res) = stoi("0x" + value);
-        if (!res) {
-            Terminal.print(tvm.functionId(Debot.start), "Invalid public key.");
-            return;
-        }
-        m_ownerKey = key;
+        if (!_parseKey(value)) return;
         getSigningBox();
     }
 
@@ -63,22 +82,25 @@ contract DeployerDebot is Debot, IAccManCallbacks {
         uint256[] keys = [m_ownerKey];
         SigningBoxInput.get(
             tvm.functionId(setSigningBoxHandle),
-            "Enter your keys that will be used to sign transfers from multisig:", 
+            "Choose your keys to sign transactions from multisig.",
             keys
         );
     }
 
     function setWalletAddress(address value) public {
         m_wallet = value;
+        if (m_ownerKey != 0) {
+            getSigningBox();
+        }
     }
 
     function setSigningBoxHandle(uint32 handle) public {
         m_sbHandle = handle;
-        callAccountManager();
+        accmanInvokeDeploy();
     }
 
 
-    function callAccountManager() public view {
+    function accmanInvokeDeploy() public view {
         TvmBuilder args;
         args.store(uint(228));
         AccMan(m_accman).invokeDeployAccount(
@@ -92,7 +114,22 @@ contract DeployerDebot is Debot, IAccManCallbacks {
 
     function onAccountDeploy(Status status, address addr) external override {
         uint8 stat = uint8(status);
-        Terminal.print(0, format("status: {}, addr: {}", stat, addr));
+        if (status == Status.Success) {
+            Terminal.print(0, format("Account successfully deployed:\n{}", addr));
+        } else {
+            Terminal.print(0, format("Account deploy failed. Error status {}", stat));
+        }
+
+        this.start();
+    }
+
+    function onQueryAccounts(address[] invites) external override {
+        Terminal.print(0, format("You have {} accounts", invites.length));
+        for (uint i = 0; i < invites.length; i++) {
+            Terminal.print(0, format("{}", invites[i]));
+        }
+
+        this.start();
     }
 
     /// @notice Returns Metadata about DeBot.
@@ -100,13 +137,13 @@ contract DeployerDebot is Debot, IAccManCallbacks {
         string name, string version, string publisher, string caption, string author,
         address support, string hello, string language, string dabi, bytes icon
     ) {
-        name = "HelloWorld";
+        name = "Account Deployer";
         version = "0.2.0";
         publisher = "TON Labs";
-        caption = "Start develop DeBot from here";
+        caption = "Account Deployment";
         author = "TON Labs";
-        support = address.makeAddrStd(0, 0x841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94);
-        hello = "Hello, i am a HelloWorld DeBot.";
+        support = address.makeAddrStd(0, 0);
+        hello = "Hello, I am a Deployer DeBot.";
         language = "en";
         dabi = m_debotAbi.get();
         icon = m_icon;
@@ -116,9 +153,18 @@ contract DeployerDebot is Debot, IAccManCallbacks {
         return [ Terminal.ID ];
     }
 
-    function setUserInput(string value) public {
-        // TODO: continue DeBot logic here...
-        Terminal.print(0, format("You have entered \"{}\"", value));
+    //
+    // Private Helpers
+    //
+
+    function _parseKey(string value) private returns (bool) {
+        (uint256 key, bool res) = stoi("0x" + value);
+        if (!res) {
+            Terminal.print(tvm.functionId(Debot.start), "Invalid public key.");
+            return res;
+        }
+        m_ownerKey = key;
+        return res;
     }
 
 }

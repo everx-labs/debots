@@ -14,7 +14,8 @@ contract InviteRoot {
         _;
     }
 
-    constructor(TvmCell image) public onlyOwner {
+    constructor(TvmCell image) public {
+        require(msg.sender != address(0), 102);
         m_inviteImage = image;
     }
 

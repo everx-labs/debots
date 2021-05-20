@@ -8,7 +8,7 @@ DEBOT_NAME=AccMan
 DEBOT_CLIENT=deployerDebot
 giver=0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94
 function giver {
-$tos --url $NETWORK call --abi ../local_giver.abi.json $giver sendGrams "{\"dest\":\"$1\",\"amount\":10000000000}"
+$tos --url $NETWORK call --abi ../local_giver.abi.json $giver sendGrams "{\"dest\":\"$1\",\"amount\":20000000000}"
 }
 function get_address {
 echo $(cat log.log | grep "Raw address:" | cut -d ' ' -f 3)
@@ -29,10 +29,27 @@ $tos --url $NETWORK call $DEBOT_ADDRESS setABI "{\"dabi\":\"$DEBOT_ABI\"}" --sig
 echo -n $DEBOT_ADDRESS > $1.addr
 }
 
+function deployMsig {
+msig=SafeMultisigWallet
+echo GENADDR $msig ----------------------------------------------
+genaddr $msig
+ADDRESS=$(get_address)
+echo GIVER $msig ------------------------------------------------
+giver $ADDRESS
+echo DEPLOY $msig -----------------------------------------------
+PUBLIC_KEY=$(cat $msig.keys.json | jq .public)
+$tos --url $NETWORK deploy $msig.tvc "{\"owners\":[\"0x${PUBLIC_KEY:1:64}\"],\"reqConfirms\":1}" --sign $msig.keys.json --abi $msig.abi.json
+echo -n $ADDRESS > msig.addr
+mv $msig.keys.json msig.key
+}
+
 LOCALNET=http://127.0.0.1
 DEVNET=https://net.ton.dev
 MAINNET=https://main.ton.dev
 NETWORK=$LOCALNET
+
+deployMsig
+MSIG_ADDRESS=$(cat msig.addr)
 
 deploy $DEBOT_NAME
 DEBOT_ADDRESS=$(cat $DEBOT_NAME.addr)
@@ -54,7 +71,10 @@ echo debot $DEBOT_ADDRESS
 deploy $DEBOT_CLIENT
 DEBOT_ADDRESS=$(cat $DEBOT_CLIENT.addr)
 $tos --url $NETWORK call $DEBOT_ADDRESS setAccman "{\"addr\":\"$ACCMAN_ADDRESS\"}" --sign $DEBOT_CLIENT.keys.json --abi $DEBOT_CLIENT.abi.json
+IMAGE=$(base64 -w 0 Account.tvc)
+$tos --url $NETWORK call $DEBOT_ADDRESS setAccount "{\"image\":\"$IMAGE\"}" --sign $DEBOT_CLIENT.keys.json --abi $DEBOT_CLIENT.abi.json
 echo client $DEBOT_ADDRESS
 echo debot $ACCMAN_ADDRESS
+echo msig $MSIG_ADDRESS
 
 $tos --url $NETWORK debot fetch $DEBOT_ADDRESS
