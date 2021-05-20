@@ -6,6 +6,7 @@ import "../Debot.sol";
 import "../Terminal.sol";
 import "AccMan.sol";
 import "IAccManCallbacks.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/AddressInput/AddressInput.sol";
 
 contract DeployerDebot is Debot, IAccManCallbacks {
     bytes m_icon;
@@ -14,6 +15,7 @@ contract DeployerDebot is Debot, IAccManCallbacks {
     TvmCell m_accountImage;
     uint256 m_ownerKey;
     uint32 m_sbHandle;
+    address m_wallet;
 
     function setIcon(bytes icon) public {
         require(msg.pubkey() == tvm.pubkey(), 100);
@@ -21,33 +23,76 @@ contract DeployerDebot is Debot, IAccManCallbacks {
         m_icon = icon;
     }
 
+    function setAccount(TvmCell image) public {
+        require(msg.pubkey() == tvm.pubkey(), 100);
+        tvm.accept();
+        m_accountImage = image;
+    }
+
+    function setAccman(address addr) public {
+        require(msg.pubkey() == tvm.pubkey(), 100);
+        tvm.accept();
+        m_accman = addr;
+    }
+
     /// @notice Entry point function for DeBot.
     function start() public override {
-        // print string to user.
-        Terminal.print(0, "Hello, World!");
-        
+        if (m_wallet == address(0)) {
+            AddressInput.get(tvm.functionId(setWalletAddress), "Enter multisig wallet address:");
+        }
+        if (m_ownerKey == 0) {
+            Terminal.print(tvm.functionId(setOwnerKey), "Enter your public key:");
+        }
+
+        if (m_ownerKey != 0 && m_wallet != address(0)) {
+            getSigningBox();
+        }
+    }
+
+    function setOwnerKey(string value) public {
+        (uint256 key, bool res) = stoi("0x" + value);
+        if (!res) {
+            Terminal.print(tvm.functionId(Debot.start), "Invalid public key.");
+            return;
+        }
+        m_ownerKey = key;
+        getSigningBox();
+    }
+
+    function getSigningBox() public {
         uint256[] keys = [m_ownerKey];
-        SigningBoxInput.get(tvm.functionId(setSigningBoxHandle), "Enter multisig keys:", keys);
+        SigningBoxInput.get(
+            tvm.functionId(setSigningBoxHandle),
+            "Enter your keys that will be used to sign transfers from multisig:", 
+            keys
+        );
+    }
+
+    function setWalletAddress(address value) public {
+        m_wallet = value;
     }
 
     function setSigningBoxHandle(uint32 handle) public {
-        Sdk.signHash(tvm.functionId(setSignature), tvm.hash(m_accountImage.toSlice().loadRef()));
         m_sbHandle = handle;
+        callAccountManager();
     }
 
-    function callAccountManager() public {
+
+    function callAccountManager() public view {
         TvmBuilder args;
         args.store(uint(228));
         AccMan(m_accman).invokeDeployAccount(
             m_accountImage,
             m_ownerKey,
+            m_wallet,
             m_sbHandle,
             args.toCell()
         );
     }
 
     function onAccountDeploy(Status status, address addr) external override {
-        
+        uint8 stat = uint8(status);
+        Terminal.print(0, format("status: {}, addr: {}", stat, addr));
     }
 
     /// @notice Returns Metadata about DeBot.

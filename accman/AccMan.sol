@@ -50,7 +50,7 @@ contract AccMan is Debot {
         m_inviteImage = image;
     }
 
-    function setInviteRootImage(TvmCell image) public onlyOwner {
+    function setInviteRoot(TvmCell image) public onlyOwner {
         m_inviteRootImage = image;
     }
 
