@@ -2,7 +2,7 @@
 
 Install `tondev` and `make`.
 
-Install `tonos-cli`:
+Install `tonos-cli` (ver >= 0.13.1):
 
     tondev tonos-cli install
 
