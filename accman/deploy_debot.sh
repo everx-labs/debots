@@ -8,7 +8,7 @@ DEBOT_NAME=AccMan
 DEBOT_CLIENT=deployerDebot
 giver=0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94
 function giver {
-$tos --url $NETWORK call --abi ../local_giver.abi.json $giver sendGrams "{\"dest\":\"$1\",\"amount\":20000000000}"
+$tos --url $NETWORK call --abi ../local_giver.abi.json $giver sendGrams "{\"dest\":\"$1\",\"amount\":30000000000}"
 }
 function get_address {
 echo $(cat log.log | grep "Raw address:" | cut -d ' ' -f 3)

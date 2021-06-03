@@ -65,7 +65,7 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
             AddressInput.get(tvm.functionId(setWalletAddress), "Choose multisig wallet which I can use to pay for account deployment:");
         }
         if (m_ownerKey == 0) {
-            Terminal.input(tvm.functionId(setOwnerKey), "Enter your public key:", false);
+            Terminal.input(tvm.functionId(setOwnerKey), "Enter public key for new account:", false);
         }
 
         if (m_ownerKey != 0 && m_wallet != address(0)) {
@@ -80,11 +80,15 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
 
     function getSigningBox() public {
         uint256[] keys = [m_ownerKey];
-        SigningBoxInput.get(
-            tvm.functionId(setSigningBoxHandle),
-            "Choose your keys to sign transactions from multisig.",
-            keys
-        );
+        if (m_sbHandle == 0) {
+            SigningBoxInput.get(
+                tvm.functionId(setSigningBoxHandle),
+                "Choose your keys to sign transactions from multisig.",
+                keys
+            );
+        } else {
+            setSigningBoxHandle(m_sbHandle);
+        }
     }
 
     function setWalletAddress(address value) public {
@@ -124,7 +128,7 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     }
 
     function onQueryAccounts(address[] invites) external override {
-        Terminal.print(0, format("You have {} accounts", invites.length));
+        Terminal.print(0, format("You have {} accounts:", invites.length));
         for (uint i = 0; i < invites.length; i++) {
             Terminal.print(0, format("{}", invites[i]));
         }

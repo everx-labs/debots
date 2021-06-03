@@ -3,6 +3,12 @@ pragma AbiHeader expire;
 pragma AbiHeader time;
 import "Invite.sol";
 
+enum InviteType {
+    Public, 
+    Private,
+    Self
+}
+
 contract InviteRoot {
 
     TvmCell m_inviteImage;
@@ -31,28 +37,41 @@ contract InviteRoot {
         delete m_hashPool[hash];
     }
 
+    //
+    // Public invite API
+    //
+
     function createPrivateInvite(string nonce, address account) public {
         require(msg.sender != address(0));
         uint256 hash = tvm.hash(nonce);
         require(m_hashPool.exists(hash), 101);
-        deployInvite(account, 1, false);
+        deployInvite(account, InviteType.Private, false);
         delete m_hashPool[hash];
     }
 
-    function createOwnerInvite(address account) public onlyOwner {
-        deployInvite(account, 1, true);
+    function createOwnerInvite(address account) public view onlyOwner {
+        deployInvite(account, InviteType.Self, true);
     }
 
-    function createPublicInvite(address account) public {
+    function createPublicInvite(address account) public view {
         require(msg.sender != address(0));
-        deployInvite(account, 0, false);
+        deployInvite(account, InviteType.Public, false);
     }
 
-    function deployInvite(address account, uint8 inviteType, bool isExternal) private returns (address) {
+    ///////////////////////////////////////////////////////////////////////////////
+
+    function deployInvite(address account, InviteType inviteType, bool isExternal) private view returns (address) {
         TvmBuilder saltBuilder;
         // uint8 (invite type) + address (invite root addr).
         // types: 0 - public invite, 1 - private invite
-        saltBuilder.store(inviteType, address(this));
+        address root;
+        if (inviteType == InviteType.Public) {
+            root = address(0);
+        } else {
+            root = address(this);
+        }
+        saltBuilder.store(uint8(inviteType), root);
+
         TvmCell code = tvm.setCodeSalt(
             m_inviteImage.toSlice().loadRef(),
             saltBuilder.toCell()
@@ -68,5 +87,13 @@ contract InviteRoot {
         }();
 
         return newInvite;
+    }
+
+    //
+    // Get-methods
+    //
+
+    function getNonces() public view returns (mapping(uint256 => bool) nonces) {
+        nonces = m_hashPool;
     }
 }
