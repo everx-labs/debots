@@ -13,6 +13,7 @@ contract InviteRoot {
 
     TvmCell m_inviteImage;
     mapping(uint256 => bool) m_hashPool;
+    address m_ownerAddress;
 
     modifier onlyOwner() {
         require(msg.pubkey() == tvm.pubkey(), 100);
@@ -20,9 +21,10 @@ contract InviteRoot {
         _;
     }
 
-    constructor(TvmCell image) public {
+    constructor(TvmCell image, address ownerAddress) public {
         require(msg.sender != address(0), 102);
         m_inviteImage = image;
+        m_ownerAddress = ownerAddress;
     }
 
     function addInvites(uint256[] hashes) public view onlyOwner {
@@ -49,7 +51,8 @@ contract InviteRoot {
         delete m_hashPool[hash];
     }
 
-    function createOwnerInvite(address account) public view onlyOwner {
+    function createSelfInvite(address account) public view {
+        require(msg.sender == m_ownerAddress, 103);
         deployInvite(account, InviteType.Self, true);
     }
 
