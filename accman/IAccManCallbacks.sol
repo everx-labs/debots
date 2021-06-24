@@ -11,7 +11,7 @@ interface IAccManCallbacks {
 }
 
 interface IonQueryAccounts {
-    function onQueryAccounts(address[] invites) external;
+    function onQueryAccounts(address[] accounts) external;
 }
 
 interface IonQueryPublicInvites {

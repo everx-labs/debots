@@ -67,12 +67,7 @@ contract InviteRoot {
         TvmBuilder saltBuilder;
         // uint8 (invite type) + address (invite root addr).
         // types: 0 - public invite, 1 - private invite
-        address root;
-        if (inviteType == InviteType.Public) {
-            root = address(0);
-        } else {
-            root = address(this);
-        }
+        address root = address(this);
         saltBuilder.store(uint8(inviteType), root);
 
         TvmCell code = tvm.setCodeSalt(

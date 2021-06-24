@@ -127,10 +127,10 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
         this.start();
     }
 
-    function onQueryAccounts(address[] invites) external override {
-        Terminal.print(0, format("You have {} accounts:", invites.length));
-        for (uint i = 0; i < invites.length; i++) {
-            Terminal.print(0, format("{}", invites[i]));
+    function onQueryAccounts(address[] accounts) external override {
+        Terminal.print(0, format("You have {} accounts:", accounts.length));
+        for (uint i = 0; i < accounts.length; i++) {
+            Terminal.print(0, format("{}", accounts[i]));
         }
 
         this.start();

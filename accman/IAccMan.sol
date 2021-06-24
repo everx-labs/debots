@@ -26,8 +26,8 @@ interface IAccMan {
         uint32 sbHandle
     ) external;
 
-    function invokeQueryPublicInvites() external;
+    function invokeQueryPublicInvites(uint256 userKey) external;
 
 
-    function invokeQueryPrivateInvites(uint256 inviterKey) external;
+    function invokeQueryPrivateInvites(uint256 userKey) external;
 }
