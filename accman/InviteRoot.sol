@@ -54,7 +54,7 @@ contract InviteRoot {
 
     function createSelfInvite(address account) public view {
         require(msg.sender == m_ownerAddress, 103);
-        deployInvite(account, InviteType.Self, true);
+        deployInvite(account, InviteType.Self, false);
     }
 
     function createPublicInvite(address account) public view {
