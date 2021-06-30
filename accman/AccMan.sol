@@ -45,6 +45,7 @@ contract AccMan is Debot, Upgradable {
     string m_nonce;
     mapping(uint256 => bool) m_ownerKeys;
     MultisigArgs m_callArgs;
+    optional(uint256, bool) m_currOwner;
 
     // helper vars
     uint32 m_gotoId;
@@ -141,7 +142,7 @@ contract AccMan is Debot, Upgradable {
         delete m_ownerKeys;
         for (uint256 key: ownerKeys) {
             if (key != deployerKey && key != 0) {
-                m_ownerKeys[key] = true;
+                m_ownerKeys[key] = false;
             }
         }
         m_ownerKey = deployerKey;
@@ -297,11 +298,6 @@ contract AccMan is Debot, Upgradable {
         IonQueryAccounts(m_invoker).onQueryAccounts(addrs);
     }
 
-    function _calcRoot() private view returns (address) {
-        TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, m_ownerKey);
-        return address(tvm.hash(rootImage));
-    }
-
     function checkRoot() public {
         address rootAddr = _calcRoot();
         Sdk.getAccountType(tvm.functionId(checkRootState), rootAddr);
@@ -320,10 +316,34 @@ contract AccMan is Debot, Upgradable {
                 return;
             }
             m_deployFlags |= CREATE_ROOT;
-            Terminal.print(m_continue, "User Invite Root is inactive.");
+            Terminal.print(0, "User Invite Root is inactive.");
         } else {
-            Terminal.print(m_continue, format("Invite Root is active: {}.", _calcRoot()));
+            Terminal.print(0, format("Invite Root is active: {}.", _calcRoot()));
         }
+        m_currOwner = m_ownerKeys.min();
+        this.checkCurrentOwnerRoot();
+    }
+
+    function checkCurrentOwnerRoot() public {
+        if (m_currOwner.hasValue()) {
+            (uint256 key, ) = m_currOwner.get();
+            Sdk.getAccountType(tvm.functionId(setCurrentRootState), _calcRootByKey(key));
+        } else {
+            Terminal.print(m_continue, "");
+        }
+    }
+
+    function setCurrentRootState(int8 acc_type) public {
+        if (!m_currOwner.hasValue()) {
+            Terminal.print(m_continue, "");
+            return;
+        }
+        (uint256 key, ) = m_currOwner.get();
+        if (acc_type == 1) {
+            m_ownerKeys[key] = true;
+        }
+        m_currOwner = m_ownerKeys.next(key);
+        this.checkCurrentOwnerRoot();
     }
 
     function signAccountCode() public {
@@ -339,10 +359,14 @@ contract AccMan is Debot, Upgradable {
     function setSignature(bytes signature) public {
         m_deployFlags |= CREATE_ACC | CREATE_INVITE;
         uint128 ownerCount = 1;
-        for ((uint256 k,): m_ownerKeys) {
+        uint128 totalFee = 0;
+        for ((uint256 k, bool isActiveRoot): m_ownerKeys) {
             ownerCount++;
+            if (!isActiveRoot) {
+                totalFee += _calcFee(CREATE_ROOT, 0);
+            }
         }
-        uint128 totalFee = _calcFee(m_deployFlags, ownerCount);
+        totalFee += _calcFee(m_deployFlags, ownerCount);
         TvmCell body = tvm.encodeBody(
             AccMan.deployAccount, m_ownerKey, m_ownerKeys, m_currentSeqno, 
             m_accountImage.toSlice().loadRef(), signature, m_args, 
@@ -470,6 +494,15 @@ contract AccMan is Debot, Upgradable {
     // Helpers
     //
 
+    function _calcRoot() private view returns (address) {
+        return _calcRootByKey(m_ownerKey);
+    }
+
+    function _calcRootByKey(uint256 key) private view returns (address) {
+        TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, key);
+        return address(tvm.hash(rootImage));
+    }
+
     function returnOnDeployStatus(Status status, address addr) internal view {
         IAccManCallbacks(m_invoker).onAccountDeploy(status, addr);
     }
@@ -544,10 +577,14 @@ contract AccMan is Debot, Upgradable {
         uint8 flags
     ) public view {
         uint128 inviteCount = 1;
-        for ((uint256 k, ): ownerKeys) {
+        uint128 totalFee = 0;
+        for ((uint256 k, bool isActiveRoot): ownerKeys) {
             inviteCount++;
+            if (!isActiveRoot) {
+                totalFee += _calcFee(CREATE_ROOT, 0);
+            }
         }
-        uint128 totalFee = _calcFee(flags, inviteCount);
+        totalFee += _calcFee(flags, inviteCount);
         require(msg.value >= totalFee, 102);
 
         if (flags & CREATE_ROOT != 0) {
@@ -562,10 +599,10 @@ contract AccMan is Debot, Upgradable {
             AccBase(account).upgrade{value: 0.1 ton, flag: 1, bounce: true}(code, signature, args);
 
             if (flags & CREATE_INVITE != 0) {
-                deployInvite(deployerKey, InviteType.Self, account, "", CREATE_ROOT);
+                deployInvite(deployerKey, InviteType.Self, account, "", 0);
 
-                for ((uint256 key,): ownerKeys) {
-                    deployInvite(key, InviteType.Public, account, "", CREATE_ROOT);
+                for ((uint256 key, bool isActiveRoot): ownerKeys) {
+                    deployInvite(key, InviteType.Public, account, "", !isActiveRoot ? CREATE_ROOT : 0);
                 }
                 // TODO: support private invites
             }
