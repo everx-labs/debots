@@ -107,9 +107,11 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     function accmanInvokeDeploy() public view {
         TvmBuilder args;
         args.store(uint(228));
+        uint256[] emptyArray;
         AccMan(m_accman).invokeDeployAccount(
             m_accountImage,
             m_ownerKey,
+            emptyArray,
             m_wallet,
             m_sbHandle,
             args.toCell()

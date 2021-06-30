@@ -3,7 +3,7 @@ pragma ton-solidity >=0.43.0;
 enum Status {
     Success, IsNoRoot, EmptyAccount, ZeroKey, InvalidSigningBoxHandle, 
     MultisigFailed, RootFailed, RootFrozen,
-    LowWalletBalance, InactiveWallet
+    LowWalletBalance, InactiveWallet, AccountUpdateFailed
 }
 
 interface IAccManCallbacks {

@@ -16,9 +16,15 @@ import "../Upgradable.sol";
 import "IAccManCallbacks.sol";
 
 contract AccMan is Debot, Upgradable {
-    uint128 constant DEPLOY_ROOT_FEE = 2 ton;
-    uint128 constant DEPLOY_ACCOUNT_FEE = 2 ton;
-    uint128 constant DEPLOY_INVITE_FEE = 1 ton;
+    uint128 constant DEPLOY_ROOT_FEE = 1 ton;
+    uint128 constant DEPLOY_ACCOUNT_FEE = 1 ton;
+    uint128 constant DEPLOY_INVITE_FEE = 0.3 ton;
+
+    struct MultisigArgs {
+        address dest;
+        uint128 value;
+        TvmCell payload;
+    }
 
     bytes m_icon;
 
@@ -37,11 +43,12 @@ contract AccMan is Debot, Upgradable {
     uint16 m_currentSeqno;
     address m_account;
     string m_nonce;
+    mapping(uint256 => bool) m_ownerKeys;
+    MultisigArgs m_callArgs;
 
     // helper vars
     uint32 m_gotoId;
     uint32 m_continue;
-    bool m_deployInProgress;
 
     Invoke m_invokeType;
     uint8 m_deployFlags;
@@ -110,7 +117,8 @@ contract AccMan is Debot, Upgradable {
     /// @notice API function.
     function invokeDeployAccount(
         TvmCell image,
-        uint256 ownerKey,
+        uint256 deployerKey,
+        uint256[] ownerKeys,
         address wallet,
         uint32 sbHandle,
         TvmCell args
@@ -122,7 +130,7 @@ contract AccMan is Debot, Upgradable {
             returnOnError(Status.EmptyAccount);
             return;
         }
-        if (ownerKey == 0) {
+        if (deployerKey == 0) {
             returnOnError(Status.ZeroKey);
             return;
         }
@@ -130,7 +138,13 @@ contract AccMan is Debot, Upgradable {
             returnOnError(Status.InvalidSigningBoxHandle);
             return;
         }
-        m_ownerKey = ownerKey;
+        delete m_ownerKeys;
+        for (uint256 key: ownerKeys) {
+            if (key != deployerKey && key != 0) {
+                m_ownerKeys[key] = true;
+            }
+        }
+        m_ownerKey = deployerKey;
         m_accountImage = image;
         m_wallet = wallet;
         m_args = args;
@@ -241,14 +255,14 @@ contract AccMan is Debot, Upgradable {
         m_deployFlags |= CREATE_INVITE;
         TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey, 
             InviteType.Private, m_account, m_nonce, m_deployFlags);
-        this.callMultisig(address(this), body, _calcFee(m_deployFlags), tvm.functionId(completePrivInvite));
+        this.callMultisig(address(this), body, _calcFee(m_deployFlags, 1), tvm.functionId(completePrivInvite));
     }
 
     function createPubInvite() public {
         m_deployFlags |= CREATE_INVITE;
         TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey, 
             InviteType.Public, m_account, "", m_deployFlags);
-        this.callMultisig(address(this), body, _calcFee(m_deployFlags), tvm.functionId(completePubInvite));
+        this.callMultisig(address(this), body, _calcFee(m_deployFlags, 1), tvm.functionId(completePubInvite));
     }
 
     function completePrivInvite() public view {
@@ -305,18 +319,8 @@ contract AccMan is Debot, Upgradable {
                 returnOnError(Status.RootFrozen);
                 return;
             }
-            //if (m_invokeType == Invoke.NewAccount) {
-                m_deployFlags |= CREATE_ROOT;
-                Terminal.print(m_continue, "[DEBUG] User Invite Root is inactive.");
-            /*} else {
-                string prompt;
-                if (m_deployInProgress) {
-                    Menu.select("Waiting for the Invite Root deployment...", "", [ MenuItem("Check again", "", tvm.functionId(menuCheckRoot)) ]);
-                } else {
-                    prompt = "AccMan needs to deploy Invite Root to manage your accounts";
-                    ConfirmInput.get(tvm.functionId(deployRoot), prompt);
-                }
-            }*/
+            m_deployFlags |= CREATE_ROOT;
+            Terminal.print(m_continue, "User Invite Root is inactive.");
         } else {
             Terminal.print(m_continue, format("Invite Root is active: {}.", _calcRoot()));
         }
@@ -326,32 +330,24 @@ contract AccMan is Debot, Upgradable {
         Sdk.signHash(tvm.functionId(setSignature), m_sbHandle, tvm.hash(m_accountImage.toSlice().loadRef()));
     }
 
-    function createSelfInvite(uint128 nanotokens) public view {
-        if (nanotokens < 2 ton) {
-            return returnOnError(Status.LowWalletBalance);
-        }
-        address account = address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno)));
-
-        TvmCell body = tvm.encodeBody(InviteRoot.createSelfInvite, account);
-        this.callMultisig(_calcRoot(), body, DEPLOY_INVITE_FEE, tvm.functionId(reportSuccess));
-    }
-
     function onRootError(uint32 sdkError, uint32 exitCode) public {
         // TODO: handle errors
         Terminal.print(0, format("[DEBUG] Error: sdk code = {}, exit code = {}", sdkError, exitCode));
         returnOnError(Status.RootFailed);
     }
 
-    function setSignature(bytes signature) public view {
-        uint128 totalFee = DEPLOY_ACCOUNT_FEE;
-        TvmCell body = tvm.encodeBody(
-            AccMan.deployAccount, m_ownerKey, m_currentSeqno, 
-            m_accountImage.toSlice().loadRef(), signature, m_args, 
-            CREATE_ACC | m_deployFlags
-        );
-        if (m_deployFlags & CREATE_ROOT != 0) {
-            totalFee += DEPLOY_ROOT_FEE;
+    function setSignature(bytes signature) public {
+        m_deployFlags |= CREATE_ACC | CREATE_INVITE;
+        uint128 ownerCount = 1;
+        for ((uint256 k,): m_ownerKeys) {
+            ownerCount++;
         }
+        uint128 totalFee = _calcFee(m_deployFlags, ownerCount);
+        TvmCell body = tvm.encodeBody(
+            AccMan.deployAccount, m_ownerKey, m_ownerKeys, m_currentSeqno, 
+            m_accountImage.toSlice().loadRef(), signature, m_args, 
+            m_deployFlags
+        );
         this.callMultisig(address(this), body, totalFee, tvm.functionId(checkAccount));
     }
 
@@ -369,30 +365,16 @@ contract AccMan is Debot, Upgradable {
         TvmCell accImage = buildAccount(m_ownerKey, m_currentSeqno);
         address addr = address(tvm.hash(accImage));
         if (code_hash == tvm.hash(accImage.toSlice().loadRef()) || code_hash == 0) {
-            // TODO: remove menu when DEngine will wait for transaction tree.
-            Menu.select("Waiting for the Account deployment...", "", [ MenuItem("Check again", "", tvm.functionId(menuCheckAccount)) ]);
+            returnOnError(Status.AccountUpdateFailed);
             return;
         }
         Terminal.print(0, format("[DEBUG] Account deployed and upgraded: {}", addr));
-        this.createSelfInvite0();
-    }
-
-    function createSelfInvite0() public {
-        Sdk.getBalance(tvm.functionId(createSelfInvite), m_wallet);
+        this.reportSuccess();
     }
 
     function reportSuccess() public {
-        Terminal.print(0, "[DEBUG] self invite created");
+        Terminal.print(0, "[DEBUG] invites created");
         returnOnDeployStatus(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
-    }
-
-    function deployRoot(bool value) public {
-        if (!value) {
-            return returnOnError(Status.IsNoRoot);
-        }
-        TvmCell body = tvm.encodeBody(AccMan.deployInviteRoot, m_ownerKey);
-        m_deployInProgress = true;
-        callMultisig(address(this), body, DEPLOY_ROOT_FEE, tvm.functionId(checkRoot));
     }
 
     function calcSeqno() private {
@@ -405,9 +387,17 @@ contract AccMan is Debot, Upgradable {
     }
 
     function callMultisig(address dest, TvmCell payload, uint128 value, uint32 gotoId) public {
+        Sdk.getBalance(tvm.functionId(callMultisig2), m_wallet);
+        m_gotoId = gotoId;
+        m_callArgs = MultisigArgs(dest, value, payload);
+    }
+
+    function callMultisig2(uint128 nanotokens) public {
+        if (m_callArgs.value + 0.1 ton >= nanotokens) {
+            return returnOnError(Status.LowWalletBalance);
+        }
         optional(uint256) pubkey = m_ownerKey;
         optional(uint32) sbhandle = m_sbHandle;
-        m_gotoId = gotoId;
         // TODO: allow transfer only from multisig with 1 custodian.
         IMultisig(m_wallet).sendTransaction{
             abiVer: 2,
@@ -419,7 +409,8 @@ contract AccMan is Debot, Upgradable {
             signBoxHandle: sbhandle,
             callbackId: tvm.functionId(onSuccess),
             onErrorId: tvm.functionId(onError)
-        }(dest, value, true, 3, payload);
+        }(m_callArgs.dest, m_callArgs.value, true, 3, m_callArgs.payload);
+        delete m_callArgs;
     }
 
     function onSuccess() public view {
@@ -532,38 +523,52 @@ contract AccMan is Debot, Upgradable {
     uint8 constant CREATE_ROOT = 2;
     uint8 constant CREATE_INVITE = 4;
 
-    function _calcFee(uint8 flags) private pure returns (uint128) {
+    function _calcFee(uint8 flags, uint128 inviteCount) private pure returns (uint128) {
         uint128 totalFee = (flags & CREATE_ACC) != 0 ? DEPLOY_ACCOUNT_FEE : 0;
         if (flags & CREATE_ROOT != 0) {
             totalFee += DEPLOY_ROOT_FEE;
         }
         if (flags & CREATE_INVITE != 0) {
-            totalFee += DEPLOY_INVITE_FEE;
+            totalFee += DEPLOY_INVITE_FEE * inviteCount;
         }
         return totalFee;
     }
 
     function deployAccount(
-        uint256 ownerKey,
+        uint256 deployerKey,
+        mapping(uint256 => bool) ownerKeys,
         uint16 seqno,
         TvmCell code,
         bytes signature,
         TvmCell args,
         uint8 flags
     ) public view {
-        uint128 totalFee = _calcFee(flags);
+        uint128 inviteCount = 1;
+        for ((uint256 k, ): ownerKeys) {
+            inviteCount++;
+        }
+        uint128 totalFee = _calcFee(flags, inviteCount);
         require(msg.value >= totalFee, 102);
 
         if (flags & CREATE_ROOT != 0) {
-            deployInviteRoot(ownerKey);
+            deployInviteRoot(deployerKey);
         }
 
         if (flags & CREATE_ACC != 0) {
-            require(tvm.checkSign(tvm.hash(code), signature.toSlice(), ownerKey), 103);
+            require(tvm.checkSign(tvm.hash(code), signature.toSlice(), deployerKey), 103);
 
-            TvmCell state = buildAccount(ownerKey, seqno);
+            TvmCell state = buildAccount(deployerKey, seqno);
             address account = new AccBase{value: DEPLOY_ACCOUNT_FEE - 0.1 ton, flag: 1, bounce: true, stateInit: state}();
             AccBase(account).upgrade{value: 0.1 ton, flag: 1, bounce: true}(code, signature, args);
+
+            if (flags & CREATE_INVITE != 0) {
+                deployInvite(deployerKey, InviteType.Self, account, "", CREATE_ROOT);
+
+                for ((uint256 key,): ownerKeys) {
+                    deployInvite(key, InviteType.Public, account, "", CREATE_ROOT);
+                }
+                // TODO: support private invites
+            }
         }
     }
 
@@ -574,32 +579,35 @@ contract AccMan is Debot, Upgradable {
         string nonce,
         uint8 flags
     ) public view {
-        uint128 fee = _calcFee(flags);
+        uint128 fee = _calcFee(flags | CREATE_INVITE, 1);
         require(msg.value >= fee, 102);
 
         if (flags & CREATE_ROOT != 0) {
             deployInviteRoot(ownerKey);
         }
-
-        if (flags & CREATE_INVITE != 0) {
-            TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, ownerKey);
-            address root = address(tvm.hash(rootImage));
-            if (invType == InviteType.Public) {
-                InviteRoot(root).createPublicInvite{
-                    value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
-                }(account);
-            } else if (invType == InviteType.Private) {
-                InviteRoot(root).createPrivateInvite{
-                    value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
-                }(nonce, account);
-            }
+        
+        TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, ownerKey);
+        address root = address(tvm.hash(rootImage));
+        if (invType == InviteType.Public) {
+            InviteRoot(root).createPublicInvite{
+                value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
+            }(account);
+        } else if (invType == InviteType.Private) {
+            InviteRoot(root).createPrivateInvite{
+                value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
+            }(nonce, account);
+        } else if (invType == InviteType.Self) {
+            InviteRoot(root).createSelfInvite{
+                value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
+            }(account);
         }
     }
 
     function deployInviteRoot(uint256 ownerKey) public view {
-        require(msg.value >= DEPLOY_ROOT_FEE, 102);
+        uint128 fee = _calcFee(CREATE_ROOT, 0);
+        require(msg.value >= fee, 102);
         TvmCell state = tvm.insertPubkey(m_inviteRootImage, ownerKey);
-        new InviteRoot {value: DEPLOY_ROOT_FEE - 0.01 ton, flag: 1, stateInit: state}(m_inviteImage, msg.sender);
+        new InviteRoot {value: fee - 0.01 ton, flag: 1, stateInit: state}(m_inviteImage, address(this));
     }
 
     //

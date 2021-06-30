@@ -23,6 +23,7 @@ contract InviteRoot {
 
     constructor(TvmCell image, address ownerAddress) public {
         require(msg.sender != address(0), 102);
+        // TODO: check signature generated from ownerAddress using tvm.pubkey().
         m_inviteImage = image;
         m_ownerAddress = ownerAddress;
     }

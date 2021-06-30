@@ -3,7 +3,8 @@ pragma ton-solidity >=0.43.0;
 interface IAccMan {
     function invokeDeployAccount(
         TvmCell image,
-        uint256 ownerKey,
+        uint256 deployerKey,
+        uint256[] ownerKeys,
         address wallet,
         uint32 sbHandle,
         TvmCell args
