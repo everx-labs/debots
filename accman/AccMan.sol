@@ -392,12 +392,10 @@ contract AccMan is Debot, Upgradable {
             returnOnError(Status.AccountUpdateFailed);
             return;
         }
-        Terminal.print(0, format("[DEBUG] Account deployed and upgraded: {}", addr));
         this.reportSuccess();
     }
 
     function reportSuccess() public {
-        Terminal.print(0, "[DEBUG] invites created");
         returnOnDeployStatus(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
     }
 
