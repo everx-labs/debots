@@ -19,6 +19,7 @@
         "uuid": "^3.3.2"
     },
     "devDependencies": {
+        "babel-eslint": "latest",
         "eslint": "latest",
         "eslint-config-airbnb": "latest",
         "eslint-plugin-import": "latest",

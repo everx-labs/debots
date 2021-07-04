@@ -1,5 +1,8 @@
-const uuidv4 = require('uuid/v4')
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-console */
+
 const qr = require('qrcode')
+const uuidv4 = require('uuid/v4')
 const express = require('express')
 const { libNode } = require('@tonclient/lib-node')
 const { Account } = require('@tonclient/appkit')
@@ -7,13 +10,13 @@ const { TonClient } = require('@tonclient/core')
 
 const { expressTryCatch, utf8ToHex } = require('../utils')
 const {
+    attemptsLimit,
+    callbackUrl,
     clientParams,
     contracts,
-    pinLength,
     debotAddress,
     deeplinkBuilder,
-    callbackUrl,
-    attemptsLimit,
+    pinLength,
 } = require('../config')
 
 const AUTH_UNKNOWN = 'AUTH_UNKNOWN'
@@ -25,16 +28,25 @@ TonClient.useBinaryLibrary(libNode)
 TonClient.defaultConfig = clientParams
 const client = TonClient.default
 
-const state = new Map()
+const router = express.Router()
 
-const getQrCode = async (req, res) => {
-    const id = uuidv4()
-    const otp = uuidv4()
+router.get('/status', expressTryCatch(getStatus))
+router.get('/qrcode', expressTryCatch(getQrCode))
+router.post('/signature', expressTryCatch(postSignature))
 
-    const pinRequired = req.query.pin === 'true'
+function getStatus(req, res) {
+    const that = req.storage.get(req.query.id)
+    res.send({ status: that ? that.status : AUTH_UNKNOWN })
+}
+
+async function getQrCode(req, res) {
+    const id = uuidv4() // generate some session id
+    const otp = uuidv4() // generated one time password
+
+    const pinRequired = req.query.pin === 'true' // set flag if PIN required
 
     const pin = pinRequired
-        ? Math.random()
+        ? Math.random() // generated PIN from random number
               .toString()
               .slice(2, pinLength + 2)
         : ''
@@ -43,6 +55,7 @@ const getQrCode = async (req, res) => {
         address: debotAddress,
     })
 
+    // Create a DeBot invoke message with required parameters
     const message = await debot
         .runLocal('getInvokeMessage', {
             id: utf8ToHex(id),
@@ -50,8 +63,9 @@ const getQrCode = async (req, res) => {
             pinRequired,
             callbackUrl: utf8ToHex(callbackUrl),
         })
-        .then((res) =>
-            res.decoded.output.message
+        .then((result) =>
+            // convert from base64 to base64url
+            result.decoded.output.message
                 .replace(/\//g, '_')
                 .replace(/\+/g, '-')
                 .replace(/=/g, ''),
@@ -59,13 +73,15 @@ const getQrCode = async (req, res) => {
 
     const deeplink = deeplinkBuilder(debotAddress, message)
 
-    state.set(id, {
+    // Remember the generated values in a local storage
+    req.storage.set(id, {
         otp,
         pin,
         status: AUTH_OPEN,
         attempts: 0,
     })
 
+    // Send QR and PIN to the frontend
     res.json({
         id,
         pin,
@@ -74,17 +90,18 @@ const getQrCode = async (req, res) => {
     })
 }
 
-const postSignature = async (req, res) => {
+async function postSignature(req, res) {
     const { id, signature, pk } = req.body
+
+    // Set headers due to Cross-Origin Resource Sharing (CORS)
     res.setHeader('Access-Control-Allow-Origin', '*')
 
-    if (!state.has(id)) return res.sendStatus(404)
+    if (!req.storage.has(id)) return res.sendStatus(404)
 
-    const that = state.get(id)
-    console.log(that)
+    const that = req.storage.get(id)
 
     try {
-        if (that.attempts > attemptsLimit) throw 'Too many attempts'
+        if (that.attempts > attemptsLimit) throw Error('Too many attempts')
 
         const { hash } = await client.crypto.sha256({
             data: Buffer.from(`${that.otp}${that.pin}`, 'utf-8').toString('base64'),
@@ -98,24 +115,13 @@ const postSignature = async (req, res) => {
 
         if (!succeeded) throw Error('Sign check failed')
 
-        state.set(id, { ...that, status: AUTH_SUCCEEDED })
-        res.sendStatus(200)
+        req.storage.set(id, { ...that, status: AUTH_SUCCEEDED })
+        return res.sendStatus(200)
     } catch (err) {
         console.log(err)
-        state.set(id, { ...that, status: AUTH_FAILED, attempts: that.attempts + 1 })
-        res.sendStatus(403)
+        req.storage.set(id, { ...that, status: AUTH_FAILED, attempts: that.attempts + 1 })
+        return res.sendStatus(403)
     }
 }
-
-const getStatus = (req, res) => {
-    const that = state.get(req.query.id)
-    res.send({ status: that ? that.status : AUTH_UNKNOWN })
-}
-
-const router = express.Router()
-
-router.get('/qrcode', expressTryCatch(getQrCode))
-router.get('/status', expressTryCatch(getStatus))
-router.post('/signature', expressTryCatch(postSignature))
 
 module.exports = router
