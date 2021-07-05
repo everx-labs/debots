@@ -10,6 +10,8 @@ This DeBot can be used in "Sign Up" / "Sign In" flows as well as in the case whe
 
  -  If the signature is correct, the server knows that this user is the real owner of this public key.
 
+![Sequence diagram](./example-webserver-nodejs/public/pic1.png)
+
 ## Prerequisites
 
     npm, node.js ver>=14, tondev
@@ -25,6 +27,7 @@ $ npm start
 
 2.  Open http://localhost:8080/surfauth.html?pin=true in a browser 
 
+3. Click on the link shown to open Surf on your local computer. **Do not scan** the QR code with your mobile phone, because the test web server is running on your local computer!
 
 ## If you want to deploy DeBot by yourself
 
