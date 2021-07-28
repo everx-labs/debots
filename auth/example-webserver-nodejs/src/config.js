@@ -11,7 +11,7 @@ const config = {
     express: { port: EXPRESS_PORT },
     callbackUrl: `http://localhost:${EXPRESS_PORT}/signature`,
     deeplinkBuilder: (adr, msg) =>
-        `https://ton-surf-alpha.firebaseapp.com/debot?address=${adr}&message=${msg}&net=devnet`,
+        `https://uri.ton.surf/debot/${adr}?net=devnet&message=${msg}`,
     clientParams: {
         network: {
             server_address: TON_SERVER,
