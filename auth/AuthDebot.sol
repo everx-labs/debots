@@ -16,8 +16,7 @@ contract AuthDebot is Debot, Upgradable {
     bytes m_icon;
 
     function start() public override {
-        Terminal.print(0, "I don't have default interaction flow. Invoke me.");
-     }
+    }
 
     /// @notice Returns Metadata about DeBot.
     function getDebotInfo() public functionID(0xDEB) override view returns(
@@ -30,7 +29,7 @@ contract AuthDebot is Debot, Upgradable {
         key = "User authentication";
         author = "TON Labs";
         support = address.makeAddrStd(0, 0x66e01d6df5a8d7677d9ab2daf7f258f1e2a7fe73da5320300395f99e01dc3b5f);
-        hello = "Hi, I can authenticate you in any external service";
+        hello = "I don't have default interaction flow. Invoke me.";
         language = "en";
         dabi = m_debotAbi.get();
         icon = m_icon;
