@@ -3,20 +3,9 @@ pragma AbiHeader expire;
 pragma AbiHeader time;
 pragma AbiHeader pubkey;
 
-import "../Debot.sol";
-import "../Terminal.sol";
-import "../Menu.sol";
-import "../AddressInput.sol";
-import "../ConfirmInput.sol";
-import "../Upgradable.sol";
-import "../Sdk.sol";
-import "./Network.sol";
-import "./Base64.sol";
-import "./SigningBoxInput.sol";
-import "./UserInfo.sol";
+import "include.sol";
 
-
-contract TodoDebot is Debot, Upgradable {
+contract AuthDebot is Debot, Upgradable {
     string m_id;
     string m_pin;
     string m_otp;
@@ -26,27 +15,30 @@ contract TodoDebot is Debot, Upgradable {
 
     bytes m_icon;
 
-    function start() public override { }
+    function start() public override {
+        Terminal.print(0, "I don't have default interaction flow. Invoke me.");
+     }
 
     /// @notice Returns Metadata about DeBot.
     function getDebotInfo() public functionID(0xDEB) override view returns(
         string name, string version, string publisher, string key, string author,
         address support, string hello, string language, string dabi, bytes icon
     ) {
-        name = "Surf Auth DeBot";
-        version = "0.2.0";
+        name = "Auth";
+        version = "0.2.1";
         publisher = "TON Labs";
-        key = "Auth";
+        key = "User authentication";
         author = "TON Labs";
         support = address.makeAddrStd(0, 0x66e01d6df5a8d7677d9ab2daf7f258f1e2a7fe73da5320300395f99e01dc3b5f);
-        hello = "Hi, i'm a Surf Auth DeBot.";
+        hello = "Hi, I can authenticate you in any external service";
         language = "en";
         dabi = m_debotAbi.get();
         icon = m_icon;
     }
 
     function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
-        return [ Terminal.ID, Menu.ID, AddressInput.ID, ConfirmInput.ID ];
+        return [ Terminal.ID, Menu.ID, AddressInput.ID, ConfirmInput.ID, 
+            Network.ID, Base64.ID, UserInfo.ID, SigningBoxInput.ID  ];
     }
 
     function onCodeUpgrade() internal override {
@@ -73,7 +65,7 @@ contract TodoDebot is Debot, Upgradable {
     function setPk(uint256 value) public {
         uint256[] pubkeys;
         m_userPK = value;
-   		SigningBoxInput.get(tvm.functionId(setSigningBoxHandle), "Please sign for authentication", pubkeys);
+   		SigningBoxInput.get(tvm.functionId(setSigningBoxHandle), "Please, sign authentication data with your key.", pubkeys);
     }
 
     function setSigningBoxHandle(uint32 handle) public {
@@ -84,8 +76,6 @@ contract TodoDebot is Debot, Upgradable {
     function setSignature(bytes signature) public {
          Base64.encode(tvm.functionId(setEncode), signature);
     }
-
-        
  
     function setEncode(string  base64) public {
         string[] headers;
@@ -95,6 +85,8 @@ contract TodoDebot is Debot, Upgradable {
     }
 
    function setResponse(int32 statusCode, string[] retHeaders, string content) public {
+        retHeaders;
+        content;
         if (statusCode == 200) {
             Terminal.print(0,'Congratulations, authentication passed.');
         } else {
@@ -105,23 +97,17 @@ contract TodoDebot is Debot, Upgradable {
 
 
     function getInvokeMessage(string id, string otp, bool pinRequired, string callbackUrl) public pure returns(TvmCell message) {
-        TvmCell body = tvm.encodeBody(TodoDebot.auth, id, otp, pinRequired, callbackUrl);
-        TvmBuilder message_;
-        message_.store(false, true, true, false, address(0), address(this));
-        message_.storeTons(0);
-        message_.storeUnsigned(0, 1);
-        message_.storeTons(0);
-        message_.storeTons(0);
-        message_.store(uint64(0));
-        message_.store(uint32(0));
-        message_.storeUnsigned(0, 1); //init: nothing$0
-        message_.storeUnsigned(1, 1); //body: right$1
-        message_.store(body);
-        message = message_.toCell();
+        message = tvm.buildIntMsg({
+            dest: address(this),
+            value: 0,
+            bounce: true,
+            call: { AuthDebot.auth, id, otp, pinRequired, callbackUrl }
+        });
     }
     
     function noop(string value) public  {
-        Terminal.input(tvm.functionId(noop),"You can leave this debot! This input is a workaround",false);
+        value;
+        Terminal.input(tvm.functionId(noop), "", false);
     }
 
 

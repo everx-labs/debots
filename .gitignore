@@ -4,3 +4,4 @@ tonos-cli
 *.log
 *.tvc
 node_modules
+.solc_imports
