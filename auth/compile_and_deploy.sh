@@ -1,1 +1,1 @@
-./compile.sh && ./deploy_debot.sh surfAuthDebot.tvc http://net.ton.dev
+./compile.sh && ./deploy_debot.sh AuthDebot.tvc http://net.ton.dev

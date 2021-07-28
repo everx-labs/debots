@@ -19,7 +19,7 @@ const config = {
     },
     contracts: {
         debot: {
-            package: require('../../SurfAuthDebotContract').SurfAuthDebotContract,
+            package: require('../../AuthDebotContract').AuthDebotContract,
         },
     },
 }
