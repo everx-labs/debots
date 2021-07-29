@@ -32,6 +32,8 @@ $ npm start
 ## If you want to deploy DeBot by yourself
 
 1. Deploy DeBot
+
+Set `GIVER_KEYS` and `GIVER_ADDRESS` variables in `deploy_debot.sh` file, then run:
 ```
 $ ./compile_and_deploy.sh 
 ```
