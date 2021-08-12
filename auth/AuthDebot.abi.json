@@ -41,7 +41,16 @@
 				{"name":"id","type":"bytes"},
 				{"name":"otp","type":"bytes"},
 				{"name":"pinRequired","type":"bool"},
-				{"name":"callbackUrl","type":"bytes"}
+				{"name":"callbackUrl","type":"bytes"},
+				{"name":"warningText","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setConfirm",
+			"inputs": [
+				{"name":"value","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -102,7 +111,8 @@
 				{"name":"id","type":"bytes"},
 				{"name":"otp","type":"bytes"},
 				{"name":"pinRequired","type":"bool"},
-				{"name":"callbackUrl","type":"bytes"}
+				{"name":"callbackUrl","type":"bytes"},
+				{"name":"warningText","type":"bytes"}
 			],
 			"outputs": [
 				{"name":"message","type":"cell"}

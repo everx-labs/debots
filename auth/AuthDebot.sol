@@ -9,7 +9,9 @@ contract AuthDebot is Debot, Upgradable {
     string m_id;
     string m_pin;
     string m_otp;
+    bool m_pinRequired;
     string m_callbackUrl;
+    string m_warningText;
     uint32 m_sigingBoxHandle;
     uint256 m_userPK;
 
@@ -44,17 +46,32 @@ contract AuthDebot is Debot, Upgradable {
         tvm.resetStorage();
     }
 
-    function auth(string id, string otp, bool pinRequired, string callbackUrl) public {
+    function auth(string id, string otp, bool pinRequired, string callbackUrl, string warningText) public {
+        require(callbackUrl !="", 120);
+        require(warningText !="", 121);
         m_id =  id;
         m_otp = otp;
+        m_pinRequired = pinRequired;
         m_callbackUrl = callbackUrl;
+        m_warningText = warningText;
 
-        if  (pinRequired) {
-            Terminal.input(tvm.functionId(getPublicKey),"Enter PIN code:",false);
+        ConfirmInput.get(tvm.functionId(setConfirm), warningText);
+    }
+
+
+    function setConfirm(bool value) public {
+        if (value == true ) { 
+            if  (m_pinRequired) {
+                Terminal.input(tvm.functionId(getPublicKey),"Enter PIN code:",false);
+            } else {
+                getPublicKey(''); 
+            }
         } else {
-            getPublicKey(''); 
+            Terminal.print(0,'Authentication is CANCELED.');
+            noop("");
         }
     }
+
 
     function getPublicKey(string value) public {
         m_pin = value;
@@ -68,7 +85,7 @@ contract AuthDebot is Debot, Upgradable {
     }
 
     function setSigningBoxHandle(uint32 handle) public {
-        uint256 hash = sha256(m_otp + m_pin);
+        uint256 hash = sha256(m_otp + m_pin + m_callbackUrl + m_warningText);
         Sdk.signHash(tvm.functionId(setSignature), handle, hash);
     }
 
@@ -95,12 +112,12 @@ contract AuthDebot is Debot, Upgradable {
     }
 
 
-    function getInvokeMessage(string id, string otp, bool pinRequired, string callbackUrl) public pure returns(TvmCell message) {
+    function getInvokeMessage(string id, string otp, bool pinRequired, string callbackUrl, string warningText) public pure returns(TvmCell message) {
         message = tvm.buildIntMsg({
             dest: address(this),
             value: 0,
             bounce: true,
-            call: { AuthDebot.auth, id, otp, pinRequired, callbackUrl }
+            call: { AuthDebot.auth, id, otp, pinRequired, callbackUrl, warningText }
         });
     }
     

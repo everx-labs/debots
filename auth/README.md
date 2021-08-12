@@ -4,9 +4,21 @@ This DeBot can be used in "Sign Up" / "Sign In" flows as well as in the case whe
 
 ## Workflow
 
- - Web server generates one time password (OTP) and some PIN (optionally), which user should sign in Surf
+ - Web server generates:
+   - one time password (OTP)
+   - PIN (optionally)
+   - callback_url
+   - warning_text
+   
+ - Web server:
+   - generates QR-code with a deeplink to the Surf containing all this data **except for the PIN**.
+   - shows PIN and QR-code to the user
 
- - User signs this OTP + PIN, and returns his signature and public key to the server
+ - The user 
+    - scans a QR code or click deeplink, and is redirected to the Surf
+    - Sees warning text, e.g. "Attention! You authorize access to ABC site"
+    - Enters OTP
+    - Signs OTP + PIN + callback_url + warning_text, and returns his signature and **his public key** to the server
 
  -  If the signature is correct, the server knows that this user is the real owner of this public key.
 

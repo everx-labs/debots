@@ -12,6 +12,7 @@ const { expressTryCatch, utf8ToHex } = require('../utils')
 const {
     attemptsLimit,
     callbackUrl,
+    warningText,
     clientParams,
     contracts,
     debotAddress,
@@ -62,6 +63,7 @@ async function getQrCode(req, res) {
             otp: utf8ToHex(otp),
             pinRequired,
             callbackUrl: utf8ToHex(callbackUrl),
+            warningText: utf8ToHex(warningText),
         })
         .then((result) =>
             // convert from base64 to base64url
@@ -104,7 +106,7 @@ async function postSignature(req, res) {
         if (that.attempts > attemptsLimit) throw Error('Too many attempts')
 
         const { hash } = await client.crypto.sha256({
-            data: Buffer.from(`${that.otp}${that.pin}`, 'utf-8').toString('base64'),
+            data: Buffer.from(`${that.otp}${that.pin}${callbackUrl}${warningText}`, 'utf-8').toString('base64'),
         })
 
         const { succeeded } = await client.crypto.nacl_sign_detached_verify({
