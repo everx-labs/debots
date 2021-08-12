@@ -1,0 +1,29 @@
+{
+    "name": "auth-surf",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "start": "node src/main 0:46cbb27dd95b9ea6965ed26b2aaef8575fb64b3928ce8216031f544943fa3966"
+    },
+    "dependencies": {
+        "@tonclient/appkit": "^0.2.0",
+        "@tonclient/core": "latest",
+        "@tonclient/lib-node": "^1.12.0",
+        "body-parser": "^1.19.0",
+        "express": "~4.17.1",
+        "http-errors": "~1.6.3",
+        "morgan": "^1.10.0",
+        "qrcode": "^1.4.4",
+        "ramda": "^0.26.1",
+        "uuid": "^3.3.2"
+    },
+    "devDependencies": {
+        "babel-eslint": "latest",
+        "eslint": "latest",
+        "eslint-config-airbnb": "latest",
+        "eslint-plugin-import": "latest",
+        "eslint-plugin-jsx-a11y": "latest",
+        "eslint-plugin-react": "latest",
+        "eslint-plugin-react-hooks": "latest"
+    }
+}

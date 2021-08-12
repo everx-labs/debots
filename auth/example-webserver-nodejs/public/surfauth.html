@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Auth with Surf</title>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td>
+                    <div id="qrcode"></div>
+                </td>
+                <td>
+                    <h3>
+                        PIN
+                        <span id="pin"></span>
+                    </h3>
+                    <h3>
+                        Status:
+                        <span id="result"></span>
+                    </h3>
+                </td>
+            </tr>
+
+            <tr></tr>
+            <tr>
+                <td>
+                    <div id="deeplink"></div>
+                </td>
+                <td></td>
+            </tr>
+
+            <tr></tr>
+        </table>
+
+        <script>
+            const $ = document.getElementById.bind(document)
+
+            const request = (path, cb) =>
+                fetch(path)
+                    .then((res) => {
+                        if (res.ok) return res.json()
+                        throw Error('HTTP error: ' + res.status)
+                    })
+                    .then(cb)
+                    .catch((err) => ($('result').innerHTML = err))
+
+            const main = async () => {
+                const pinRequired = new URLSearchParams(document.location.search).get('pin')
+
+                const id = await request(`./qrcode?pin=${pinRequired}`, (json) => {
+                    const { qrbase64, deeplink, pin, id } = json
+                    $('qrcode').innerHTML = `<img src="${qrbase64}" alt="Red dot" />`
+                    $('deeplink').innerHTML = `<a href=${deeplink} target="_blank"> ${deeplink.slice(0, 90)}...</a>`
+                    $('pin').innerHTML = pin ? pin : 'Not requested'
+                    return id
+                })
+
+                setInterval(() => request(`./status?id=${id}`, ({ status }) => ($('result').innerHTML = status)), 1000)
+            }
+
+            main().catch(console.log)
+        </script>
+    </body>
+</html>

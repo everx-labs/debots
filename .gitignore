@@ -3,3 +3,5 @@ tonos-cli
 *.code
 *.log
 *.tvc
+node_modules
+.solc_imports
