@@ -2,6 +2,9 @@
 
 This DeBot can be used in "Sign Up" / "Sign In" flows as well as in the case when an already registered user wants to link his Surf account.
 
+## Disclaimer
+This code is still experimental, do not use it in production.
+
 ## Workflow
 
  - Web server generates:
