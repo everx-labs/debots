@@ -29,3 +29,7 @@ interface IonCreatePublicInvite {
 interface IonCreatePrivateInvite {
     function onCreatePrivateInvite(Status status) external;
 }
+
+interface IonUpdateAccountPublicInvites {
+    function onUpdateAccountPublicInvites(Status status) external;
+}

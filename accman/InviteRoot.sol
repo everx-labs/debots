@@ -2,11 +2,13 @@ pragma ton-solidity >=0.43.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
 import "Invite.sol";
+import "RedensLib.sol";
 
 enum InviteType {
     Public, 
     Private,
-    Self
+    Self,
+    Unknown
 }
 
 contract InviteRoot {
@@ -62,9 +64,8 @@ contract InviteRoot {
         deployInvite(account, InviteType.Public, false);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////
-
-    function deployInvite(address account, InviteType inviteType, bool isExternal) private view returns (address) {
+    function destroyInvite(address account, InviteType inviteType) public view {
+        require(msg.sender == m_ownerAddress, 103);
         TvmBuilder saltBuilder;
         // uint8 (invite type) + address (invite root addr).
         // types: 0 - public invite, 1 - private invite
@@ -75,17 +76,48 @@ contract InviteRoot {
             m_inviteImage.toSlice().loadRef(),
             saltBuilder.toCell()
         );
+
+        address currInvite = address(tvm.hash(
+            tvm.buildStateInit({ 
+                code: code,
+                pubkey: tvm.pubkey(),
+                varInit: {account: account},
+                contr: Invite
+            })
+        ));
+
+        _sendDestroyInvite(currInvite);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+
+    function deployInvite(address account, InviteType inviteType, bool isExternal) private view 
+        returns (address) {
+        TvmBuilder saltBuilder;
+        // uint8 (invite type) + address (invite root addr) + root owner public key.
+        // types: 0 - public invite, 1 - private invite
+        saltBuilder.store(uint8(inviteType), address(this), tvm.pubkey());
+        TvmCell code = tvm.setCodeSalt(
+            m_inviteImage.toSlice().loadRef(),
+            saltBuilder.toCell()
+        );
         (uint128 value, uint16 flag) = isExternal ? (1 ton, 3) : (0, 64);
-        address newInvite = new Invite {
+        return _sendDeployInvite(code, account, value, flag);
+    }
+
+    function _sendDeployInvite(TvmCell code, address account, uint128 value, uint16 flag) private view returns (address) {
+        return new Invite {
             value: value,
             flag: flag,
             bounce: true,
             code: code,
-            pubkey: tvm.pubkey(),
+            pubkey: RedensLib.INVITE_KEY,
             varInit: { account: account } 
         }();
+    }
 
-        return newInvite;
+    function _sendDestroyInvite(address invite) private pure {
+        Invite2(invite).destroy();
     }
 
     //
