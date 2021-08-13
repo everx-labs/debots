@@ -117,7 +117,7 @@ contract InviteRoot {
     }
 
     function _sendDestroyInvite(address invite) private pure {
-        Invite2(invite).destroy();
+        Invite(invite).destroy();
     }
 
     //

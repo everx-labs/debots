@@ -14,7 +14,7 @@ import "InviteRoot.sol";
 import "AccBase.sol";
 import "../Upgradable.sol";
 import "IAccManCallbacks.sol";
-import "Invite2.sol";
+import "Invite.sol";
 
 contract AccMan is Debot, Upgradable {
     uint128 constant DEPLOY_ROOT_FEE = 1 ton;
@@ -45,7 +45,7 @@ contract AccMan is Debot, Upgradable {
     address m_account;
     string m_nonce;
     mapping(uint256 => bool) m_ownerKeys;
-    mapping(uint256 => bool) m_currentOwnerKeys;
+    mapping(uint256 => bytes) m_currentOwnerKeys;
     MultisigArgs m_callArgs;
     optional(uint256, bool) m_currOwner;
 
@@ -246,25 +246,23 @@ contract AccMan is Debot, Upgradable {
         m_account = account;
         m_invokeType = Invoke.updateInvites;
         m_invoker = msg.sender;
+        m_wallet = wallet;
         if (sbHandle == 0) {
             returnOnError(Status.InvalidSigningBoxHandle);
             return;
         }
         delete m_ownerKeys;
-        m_wallet = wallet;
+        delete m_currentOwnerKeys;
         for (uint256 key: ownerKeys) {
             if (key != 0) {
                 m_ownerKeys[key] = false;
             }
         }
-        m_currOwner = 0;
-        //m_continue = tvm.functionId(updateInvites2);
-        //checkNextOwnerInvite();
+        m_currOwner = (0, false);
         //  Get list of account owners:
         //      - query all invites with `account` address in initial data.
         //  Destroy owner invites except those belonging to ownerKeys.
         //  Create new invites.
-        delete m_currentOwnerKeys;
         
         Sdk.getAccountsDataByHash(
             tvm.functionId(collectAccountInvites),
@@ -451,7 +449,8 @@ contract AccMan is Debot, Upgradable {
 
     function collectAccountInvites(AccData[] accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
-                Invite(accounts[i].id).getParams{
+            Invite(accounts[i].id).getParams{
+                abiVer: 2,
                 extMsg: true,
                 sign: false,
                 time: 0,
@@ -472,32 +471,32 @@ contract AccMan is Debot, Upgradable {
         }
     }
 
-    function onGetParams(InviteType kind, address rootAddr, uint256 ownerPubkey) public {
-        if (kind != InviteType.Unknown) {
-            m_currentOwnerKeys[ownerPubkey] = true;
+    function onGetParams(uint8 kind, address rootAddr, uint256 ownerPubkey) public {
+        if (InviteType(kind) != InviteType.Unknown) {
+            m_currentOwnerKeys[ownerPubkey] = "";
         }
     }
 
     function excludeExistedInvites() public {
+        for ((uint256 key, ) : m_currentOwnerKeys) {
+            if (m_ownerKeys.exists(key)) {
+                delete m_ownerKeys[key];
+                delete m_currentOwnerKeys[key];
+            }
+        }
         m_continue = tvm.functionId(callUpdatePublicInvites);
         checkRoot();
     }
 
-    
-
-    function updateInvites2() public {
-    }
-
-
     function callUpdatePublicInvites() public {
         TvmCell body = tvm.encodeBody(
             AccMan.updateInvites, m_account, m_currentOwnerKeys, m_ownerKeys);
-        uint128 totalFee = m_ownerKeys.length * 0.3 ton;
+        uint128 totalFee = _calcDeployInvitesFee(CREATE_INVITE | CREATE_ROOT, m_ownerKeys);
         callMultisig(address(this), body, totalFee, tvm.functionId(onUpdateInvites));
     }
 
     function onUpdateInvites() public {
-
+        IonUpdateAccountPublicInvites(m_invoker).onUpdateAccountPublicInvites(Status.Success);
     }
 
     function callMultisig(address dest, TvmCell payload, uint128 value, uint32 gotoId) public {
@@ -604,6 +603,8 @@ contract AccMan is Debot, Upgradable {
             IonCreatePublicInvite(m_invoker).onCreatePublicInvite(status);
         } else if (m_invokeType == Invoke.NewPrivateInvite) {
             IonCreatePrivateInvite(m_invoker).onCreatePrivateInvite(status);
+        } else if (m_invokeType == Invoke.updateInvites) {
+            IonUpdateAccountPublicInvites(m_invoker).onUpdateAccountPublicInvites(status);
         }
     }
 
@@ -636,7 +637,8 @@ contract AccMan is Debot, Upgradable {
         TvmCell stateInit = tvm.buildStateInit({
             code: empty,
             pubkey: RedensLib.INVITE_KEY,
-            varInit: { account: account } 
+            varInit: { account: account },
+            contr: Invite
         });
         stateInit.toSlice().loadRef();
         TvmCell data = stateInit.toSlice().loadRef();
@@ -669,6 +671,23 @@ contract AccMan is Debot, Upgradable {
         return totalFee;
     }
 
+    function _calcDeployInvitesFee(uint8 flags, mapping(uint256 => bool) keys) private pure returns (uint128) {
+        uint128 totalFee = 0;
+        uint128 count = 0;
+        if (flags & CREATE_ROOT != 0) {
+            for((uint256 key, bool rootDeployed): keys) {
+                if (!rootDeployed) {
+                    totalFee += DEPLOY_ROOT_FEE;
+                }
+                count++;
+            }
+        }
+        if (flags & CREATE_INVITE != 0) {
+            totalFee += DEPLOY_INVITE_FEE * count;
+        }
+        return totalFee;
+    }
+
     function deployAccount(
         uint256 deployerKey,
         mapping(uint256 => bool) ownerKeys,
@@ -687,7 +706,7 @@ contract AccMan is Debot, Upgradable {
             }
         }
         totalFee += _calcFee(flags, inviteCount);
-        drequire(msg.value >= totalFee, 102);
+        require(msg.value >= totalFee, 102);
 
         if (flags & CREATE_ROOT != 0) {
             deployInviteRoot(deployerKey);
@@ -756,12 +775,11 @@ contract AccMan is Debot, Upgradable {
     ) public {
         require(msg.sender != address(0), 101);
         uint128 totalFee = 0;
-        uint inviteCount = 0;
+        uint128 inviteCount = 0;
         mapping(uint256 => bool) addOwnerKeys;
-        for ((uint256 key, bool isRootDeployed) :  newOwnerKeys) {
+        for ((uint256 key, bool isRootDeployed): newOwnerKeys) {
             if (!oldOwnerKeys.exists(key)) {
                 addOwnerKeys[key] = isRootDeployed;
-                removeOwnerKeys[key] = true;
                 inviteCount++;
                 if (!isRootDeployed) {
                     totalFee += _calcFee(CREATE_ROOT, 0);
@@ -774,27 +792,24 @@ contract AccMan is Debot, Upgradable {
         require(msg.value >= totalFee, 102);
 
         for ((uint256 key, ): oldOwnerKeys) {
-            destroyInvite(key, account);
+            destroyInvite(key, account, InviteType.Public);
         }
 
-        for ((uint256 key, bool isActiveRoot): addOwnerKeys) {
-            deployInvite(key, InviteType.Public, "", !isActiveRoot ? CREATE_ROOT : 0);
+        for ((uint256 key, bool isRootDeployed): addOwnerKeys) {
+            deployInvite(key, InviteType.Public, account, "", !isRootDeployed ? CREATE_ROOT : 0);
         }
     }
 
     function destroyInvite(
         uint256 ownerKey,
-        address account
+        address account,
+        InviteType kind
     ) private view {
-        if (flags & CREATE_ROOT != 0) {
-            deployInviteRoot(ownerKey);
-        }
-        
         TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, ownerKey);
         address root = address(tvm.hash(rootImage));
         InviteRoot(root).destroyInvite{
             value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
-        }(account);
+        }(account, kind);
     }
 
 

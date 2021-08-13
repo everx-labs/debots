@@ -1,7 +1,7 @@
 pragma ton-solidity >=0.43.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
-
+import {InviteType} from "InviteRoot.sol";
 contract Invite {
 
     uint8 public version = 2;
@@ -25,14 +25,14 @@ contract Invite {
     }
 
     function getParams() public pure 
-        returns (InviteType kind, address rootAddr, uint256 ownerPubkey) {
-        requuire(msg.sender == address(0));
+        returns (uint8 kind, address rootAddr, uint256 ownerPubkey) {
+        require(msg.sender == address(0));
         TvmCell code = tvm.code();
         optional(TvmCell) salt = tvm.codeSalt(code);
         if (salt.hasValue()) {
             (kind, rootAddr, ownerPubkey) = salt.get().toSlice().decode(uint8, address, uint256);
         } else {
-            kind = InviteType.Unknown;
+            kind = uint8(InviteType.Unknown);
             rootAddr = address(0);
             ownerPubkey = 0;
         }
