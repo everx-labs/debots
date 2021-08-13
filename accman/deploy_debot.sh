@@ -16,6 +16,9 @@ echo $(cat log.log | grep "Raw address:" | cut -d ' ' -f 3)
 function genaddr {
 $tos genaddr $1.tvc $1.abi.json --genkey $1.keys.json > log.log
 }
+function get_pubkey {
+echo 0x$(cat $1 | grep "public" | cut -d '"' -f 4)
+}
 function deploy {
 echo GENADDR $1 ----------------------------------------------
 genaddr $1
@@ -50,6 +53,7 @@ NETWORK=$LOCALNET
 
 deployMsig
 MSIG_ADDRESS=$(cat msig.addr)
+MSIG_PUBKEY=$(get_pubkey msig.key)
 
 deploy $DEBOT_NAME
 DEBOT_ADDRESS=$(cat $DEBOT_NAME.addr)
@@ -77,4 +81,5 @@ echo client $DEBOT_ADDRESS
 echo debot $ACCMAN_ADDRESS
 echo msig $MSIG_ADDRESS
 
+$tos config --wallet $MSIG_ADDRESS --pubkey $MSIG_PUBKEY
 $tos --url $NETWORK debot fetch $DEBOT_ADDRESS

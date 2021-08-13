@@ -163,7 +163,7 @@ contract AccMan is Debot, Upgradable {
         m_ownerKey = ownerKey;
         Sdk.getAccountsDataByHash(
             tvm.functionId(setInvites),
-            tvm.hash(buildInviteCode(InviteType.Self, _calcRoot())),
+            tvm.hash(buildInviteCode(InviteType.Self, m_ownerKey)),
             address.makeAddrStd(-1, 0)
         );
     }
@@ -219,7 +219,7 @@ contract AccMan is Debot, Upgradable {
         m_ownerKey = userKey;
         Sdk.getAccountsDataByHash(
             tvm.functionId(setAllPublicInvitesForUser),
-            tvm.hash(buildInviteCode(InviteType.Public, _calcRoot())),
+            tvm.hash(buildInviteCode(InviteType.Public, m_ownerKey)),
             address.makeAddrStd(-1, 0)
         );
     }
@@ -231,7 +231,7 @@ contract AccMan is Debot, Upgradable {
         m_ownerKey = userKey;
         Sdk.getAccountsDataByHash(
             tvm.functionId(setAllPrivateInvitesForUser),
-            tvm.hash(buildInviteCode(InviteType.Private, _calcRoot())),
+            tvm.hash(buildInviteCode(InviteType.Private, m_ownerKey)),
             address.makeAddrStd(-1, 0)
         );
     }
@@ -442,7 +442,7 @@ contract AccMan is Debot, Upgradable {
         m_currentSeqno = 0;
         Sdk.getAccountsDataByHash(
             tvm.functionId(setResult),
-            tvm.hash(buildInviteCode(InviteType.Self, _calcRoot())),
+            tvm.hash(buildInviteCode(InviteType.Self, m_ownerKey)),
             address.makeAddrStd(-1, 0)
         );
     }
@@ -547,11 +547,9 @@ contract AccMan is Debot, Upgradable {
     function setResult(AccData[] accounts) public {
         uint16 counter = 0;
         for (uint i = 0; i < accounts.length; i++) {
-            uint256 pubkey = accounts[i].data.toSlice().decode(uint256);
-            if (pubkey == m_ownerKey) {
-                counter++;
-            }
+            counter++;
         }
+        Terminal.print(0, format("[DEBUG] seqno = {}", counter));
         m_currentSeqno = counter;
 
         m_continue = tvm.functionId(signAccountCode);
@@ -620,10 +618,11 @@ contract AccMan is Debot, Upgradable {
         image = newImage;
     }
 
-    function buildInviteCode(InviteType inviteType, address inviteRoot) private view returns (TvmCell) {
+    function buildInviteCode(InviteType inviteType, uint256 ownerKey) private view returns (TvmCell) {
         TvmBuilder saltBuilder;
-        // uint8 (invite type) + address (invite root addr).
-        saltBuilder.store(uint8(inviteType), inviteRoot);
+        address inviteRoot = _calcRootByKey(ownerKey);
+        // uint8 (invite type) + address (invite root addr) + uint256 (owner pub key).
+        saltBuilder.store(uint8(inviteType), inviteRoot, ownerKey);
         TvmCell code = tvm.setCodeSalt(
             m_inviteImage.toSlice().loadRef(),
             saltBuilder.toCell()

@@ -7,6 +7,7 @@ import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/Termi
 import "AccMan.sol";
 import "IAccManCallbacks.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/AddressInput/AddressInput.sol";
+import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/UserInfo/UserInfo.sol";
 
 contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     bytes m_icon;
@@ -47,25 +48,25 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     function menuViewAccounts(uint32 index) public {
         index;
         if (m_ownerKey == 0) {
-            Terminal.input(tvm.functionId(setOwnerKey2), "Enter your public key:", false);
+            UserInfo.getPublicKey(tvm.functionId(setOwnerKey2));
         } else {
             AccMan(m_accman).invokeQueryAccounts(m_ownerKey);
         }
     }
 
-    function setOwnerKey2(string value) public {
-        if (!_parseKey(value)) return;
-
+    function setOwnerKey2(uint256 value) public {
+        require(value != 0);
+        m_ownerKey = value;
         AccMan(m_accman).invokeQueryAccounts(m_ownerKey);
     }
 
     function menuDeployAccount(uint32 index) public {
         index;
         if (m_wallet == address(0)) {
-            AddressInput.get(tvm.functionId(setWalletAddress), "Choose multisig wallet which I can use to pay for account deployment:");
+            UserInfo.getAccount(tvm.functionId(setWalletAddress));
         }
         if (m_ownerKey == 0) {
-            Terminal.input(tvm.functionId(setOwnerKey), "Enter public key for new account:", false);
+            UserInfo.getPublicKey(tvm.functionId(setOwnerKey));
         }
 
         if (m_ownerKey != 0 && m_wallet != address(0)) {
@@ -73,8 +74,9 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
         }
     }
 
-    function setOwnerKey(string value) public {
-        if (!_parseKey(value)) return;
+    function setOwnerKey(uint256 value) public {
+        require(value != 0);
+        m_ownerKey = value;
         getSigningBox();
     }
 

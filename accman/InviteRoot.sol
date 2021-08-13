@@ -4,13 +4,6 @@ pragma AbiHeader time;
 import "Invite.sol";
 import "RedensLib.sol";
 
-enum InviteType {
-    Public, 
-    Private,
-    Self,
-    Unknown
-}
-
 contract InviteRoot {
 
     TvmCell m_inviteImage;

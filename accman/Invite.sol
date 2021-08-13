@@ -1,12 +1,18 @@
 pragma ton-solidity >=0.43.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
-import {InviteType} from "InviteRoot.sol";
+enum InviteType {
+    Public, 
+    Private,
+    Self,
+    Unknown
+}
+
 contract Invite {
 
-    uint8 public version = 2;
-    
     address static account;
+
+    uint8 public version = 2;
 
     constructor() public {
         TvmCell code = tvm.code();
