@@ -689,10 +689,8 @@ contract AccMan is Debot, Upgradable {
     function _calcDeployInvitesFee(uint8 flags, mapping(uint256 => bool) keys, mapping(uint256 => bytes) oldkeys) private returns (uint128) {
         uint128 totalFee = 0;
         uint128 count = 0;
-        Terminal.print(0, "new");
         if (flags & CREATE_ROOT != 0) {
             for((uint256 key, bool rootDeployed): keys) {
-                Terminal.print(0, format("{:x}", key));
                 if (!rootDeployed) {
                     totalFee += DEPLOY_ROOT_FEE;
                 }
@@ -703,9 +701,7 @@ contract AccMan is Debot, Upgradable {
             totalFee += DEPLOY_INVITE_FEE * count;
         }
         count = 0;
-        Terminal.print(0, "old");
         for((uint256 key, ): oldkeys) {
-            Terminal.print(0, format("{:x}", key));
             count++;
         }
         if (flags & DESTROY_INVITE != 0) {

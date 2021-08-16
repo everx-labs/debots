@@ -9,7 +9,12 @@ import "IAccManCallbacks.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/AddressInput/AddressInput.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/UserInfo/UserInfo.sol";
 
-contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts, IonUpdateAccountPublicInvites {
+contract DeployerDebot is Debot, 
+                        IAccManCallbacks,
+                        IonQueryAccounts,
+                        IonUpdateAccountPublicInvites,
+                        IonQueryPublicInvites
+{
     bytes m_icon;
 
     address m_accman;
@@ -93,6 +98,14 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts, IonUpdateAc
 
     function menuViewAccountsByKey(uint32 index) public {
         index;
+        Terminal.input(tvm.functionId(enterOneKey), "enter public key:", false);
+        
+    }
+
+    function enterOneKey(string value) public {
+        (uint256 key, bool res) = _parseKey(value);
+        if (!res) return;
+        AccMan(m_accman).invokeQueryPublicInvites(key);
     }
 
     function setKey(uint256 value) public {
@@ -129,8 +142,8 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts, IonUpdateAc
         );
     }
 
-    function onUpdateAccountPublicInvites(Status result) external override {
-        Terminal.print(0, result == Status.Success ? "succeded" : "failed");
+    function onUpdateAccountPublicInvites(Status status) external override {
+        Terminal.print(0, status == Status.Success ? "succeded" : "failed");
         this.start();
     }
 
@@ -191,11 +204,18 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts, IonUpdateAc
     }
 
     function onQueryAccounts(address[] accounts) external override {
-        Terminal.print(0, format("You have {} accounts:", accounts.length));
+        Terminal.print(0, format("You deployed {} accounts", accounts.length));
         for (uint i = 0; i < accounts.length; i++) {
             Terminal.print(0, format("{}", accounts[i]));
         }
+        this.start();
+    }
 
+    function onQueryPublicInvites(address[] accounts) external override {
+        Terminal.print(0, format("You own {} accounts", accounts.length));
+        for (uint i = 0; i < accounts.length; i++) {
+            Terminal.print(0, format("{}", accounts[i]));
+        }
         this.start();
     }
 
