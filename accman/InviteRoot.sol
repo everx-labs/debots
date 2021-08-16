@@ -110,7 +110,7 @@ contract InviteRoot {
     }
 
     function _sendDestroyInvite(address invite) private pure {
-        Invite(invite).destroy();
+        Invite(invite).destroy{value: 0, flag: 64, bounce: true}();
     }
 
     //

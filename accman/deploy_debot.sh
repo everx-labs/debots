@@ -82,4 +82,5 @@ echo debot $ACCMAN_ADDRESS
 echo msig $MSIG_ADDRESS
 
 $tos config --wallet $MSIG_ADDRESS --pubkey $MSIG_PUBKEY
+echo $tos --url $NETWORK debot fetch $DEBOT_ADDRESS
 $tos --url $NETWORK debot fetch $DEBOT_ADDRESS

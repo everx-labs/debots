@@ -32,6 +32,8 @@ interface IAccMan {
     function invokeQueryPrivateInvites(uint256 userKey) external;
 
     function invokeUpdateAccountPublicInvites(
+        address account,
+        uint256[] oldKeys,
         uint256[] ownerKeys,
         address wallet,
         uint32 sbHandle

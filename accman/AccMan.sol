@@ -17,9 +17,10 @@ import "IAccManCallbacks.sol";
 import "Invite.sol";
 
 contract AccMan is Debot, Upgradable {
-    uint128 constant DEPLOY_ROOT_FEE = 1 ton;
-    uint128 constant DEPLOY_ACCOUNT_FEE = 1 ton;
-    uint128 constant DEPLOY_INVITE_FEE = 0.3 ton;
+    uint128 constant DEPLOY_ROOT_FEE = 0.5 ton;
+    uint128 constant DEPLOY_ACCOUNT_FEE = 0.5 ton;
+    uint128 constant DEPLOY_INVITE_FEE = 0.1 ton;
+    uint128 constant DESTROY_INVITE_FEE = 0.1 ton;
 
     struct MultisigArgs {
         address dest;
@@ -239,6 +240,7 @@ contract AccMan is Debot, Upgradable {
     /// @notice API function.
     function invokeUpdateAccountPublicInvites(
         address account,
+        uint256[] oldKeys,
         uint256[] ownerKeys,
         address wallet,
         uint32 sbHandle
@@ -258,17 +260,29 @@ contract AccMan is Debot, Upgradable {
                 m_ownerKeys[key] = false;
             }
         }
+        for (uint256 key: oldKeys) {
+            if (key != 0) {
+                m_currentOwnerKeys[key] = "";
+            }
+        }
         m_currOwner = (0, false);
+        
+        this.excludeExistedInvites();
         //  Get list of account owners:
         //      - query all invites with `account` address in initial data.
         //  Destroy owner invites except those belonging to ownerKeys.
         //  Create new invites.
         
+        // TODO: we have no function to search account by data hash thus
+        // we cannot find all current account owners.
+        // The next code will be useful when DeBot will have such a function.
+        /*
         Sdk.getAccountsDataByHash(
-            tvm.functionId(collectAccountInvites),
+            tvm.functionId(excludeExistedInvites),
             tvm.hash(buildInviteData(m_account)),
             address.makeAddrStd(-1, 0)
         );
+        */
     }
 
     /* TODO: implement add/remove nonces
@@ -491,7 +505,9 @@ contract AccMan is Debot, Upgradable {
     function callUpdatePublicInvites() public {
         TvmCell body = tvm.encodeBody(
             AccMan.updateInvites, m_account, m_currentOwnerKeys, m_ownerKeys);
-        uint128 totalFee = _calcDeployInvitesFee(CREATE_INVITE | CREATE_ROOT, m_ownerKeys);
+        uint128 totalFee = _calcDeployInvitesFee(
+            CREATE_INVITE | CREATE_ROOT | DESTROY_INVITE, m_ownerKeys, m_currentOwnerKeys
+        );
         callMultisig(address(this), body, totalFee, tvm.functionId(onUpdateInvites));
     }
 
@@ -549,7 +565,6 @@ contract AccMan is Debot, Upgradable {
         for (uint i = 0; i < accounts.length; i++) {
             counter++;
         }
-        Terminal.print(0, format("[DEBUG] seqno = {}", counter));
         m_currentSeqno = counter;
 
         m_continue = tvm.functionId(signAccountCode);
@@ -658,6 +673,7 @@ contract AccMan is Debot, Upgradable {
     uint8 constant CREATE_ACC = 1;
     uint8 constant CREATE_ROOT = 2;
     uint8 constant CREATE_INVITE = 4;
+    uint8 constant DESTROY_INVITE = 8;
 
     function _calcFee(uint8 flags, uint128 inviteCount) private pure returns (uint128) {
         uint128 totalFee = (flags & CREATE_ACC) != 0 ? DEPLOY_ACCOUNT_FEE : 0;
@@ -670,11 +686,13 @@ contract AccMan is Debot, Upgradable {
         return totalFee;
     }
 
-    function _calcDeployInvitesFee(uint8 flags, mapping(uint256 => bool) keys) private pure returns (uint128) {
+    function _calcDeployInvitesFee(uint8 flags, mapping(uint256 => bool) keys, mapping(uint256 => bytes) oldkeys) private returns (uint128) {
         uint128 totalFee = 0;
         uint128 count = 0;
+        Terminal.print(0, "new");
         if (flags & CREATE_ROOT != 0) {
             for((uint256 key, bool rootDeployed): keys) {
+                Terminal.print(0, format("{:x}", key));
                 if (!rootDeployed) {
                     totalFee += DEPLOY_ROOT_FEE;
                 }
@@ -683,6 +701,15 @@ contract AccMan is Debot, Upgradable {
         }
         if (flags & CREATE_INVITE != 0) {
             totalFee += DEPLOY_INVITE_FEE * count;
+        }
+        count = 0;
+        Terminal.print(0, "old");
+        for((uint256 key, ): oldkeys) {
+            Terminal.print(0, format("{:x}", key));
+            count++;
+        }
+        if (flags & DESTROY_INVITE != 0) {
+            totalFee += DESTROY_INVITE_FEE * count;
         }
         return totalFee;
     }
@@ -807,7 +834,7 @@ contract AccMan is Debot, Upgradable {
         TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, ownerKey);
         address root = address(tvm.hash(rootImage));
         InviteRoot(root).destroyInvite{
-            value: DEPLOY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
+            value: DESTROY_INVITE_FEE - 0.01 ton, flag: 0, bounce: true
         }(account, kind);
     }
 

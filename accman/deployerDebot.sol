@@ -9,7 +9,7 @@ import "IAccManCallbacks.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/AddressInput/AddressInput.sol";
 import "https://raw.githubusercontent.com/tonlabs/DeBot-IS-consortium/main/UserInfo/UserInfo.sol";
 
-contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
+contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts, IonUpdateAccountPublicInvites {
     bytes m_icon;
 
     address m_accman;
@@ -17,6 +17,9 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     uint256 m_ownerKey;
     uint32 m_sbHandle;
     address m_wallet;
+    address m_account;
+    uint256[] m_newOwners;
+    uint32 m_continue;
 
     function setIcon(bytes icon) public {
         require(msg.pubkey() == tvm.pubkey(), 100);
@@ -38,11 +41,21 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
 
     /// @notice Entry point function for DeBot.
     function start() public override {
+        m_continue = 0;
+        if (m_wallet == address(0)) {
+            UserInfo.getAccount(tvm.functionId(setWalletAddress));
+        } else {
+            _start();
+        }
+    }
+
+    function _start() private {
         Menu.select("I can manage your wallet accounts.", "", [
             MenuItem("Deploy new account", "", tvm.functionId(menuDeployAccount)),
-            MenuItem("Show all your accounts", "", tvm.functionId(menuViewAccounts))
+            MenuItem("Show all your accounts", "", tvm.functionId(menuViewAccounts)),
+            MenuItem("Show accounts by key", "", tvm.functionId(menuViewAccountsByKey)),
+            MenuItem("Update account owners", "", tvm.functionId(menuUpdateOwners))
         ]);
-        
     }
 
     function menuViewAccounts(uint32 index) public {
@@ -62,21 +75,69 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
 
     function menuDeployAccount(uint32 index) public {
         index;
-        if (m_wallet == address(0)) {
-            UserInfo.getAccount(tvm.functionId(setWalletAddress));
-        }
         if (m_ownerKey == 0) {
             UserInfo.getPublicKey(tvm.functionId(setOwnerKey));
         }
 
         if (m_ownerKey != 0 && m_wallet != address(0)) {
+            m_continue = tvm.functionId(accmanInvokeDeploy);
             getSigningBox();
         }
+    }
+
+    function menuUpdateOwners(uint32 index) public {
+        index;
+        UserInfo.getPublicKey(tvm.functionId(setKey));
+        AddressInput.get(tvm.functionId(enterAccount), "enter account address:");
+    }
+
+    function menuViewAccountsByKey(uint32 index) public {
+        index;
+    }
+
+    function setKey(uint256 value) public {
+        m_ownerKey = value;
+    }
+
+    function enterAccount(address value) public {
+        m_account = value;
+        enterKey(".");
+    }
+
+    function enterKey(string value) public {
+        bool res = true;
+        uint256 key = 0;
+        if (value != ".") {
+            (key, res) = _parseKey(value);
+        }
+        if (!res) {
+            m_continue = tvm.functionId(updateInvites);
+            getSigningBox();
+        } else {
+            m_newOwners.push(key);
+            Terminal.input(tvm.functionId(enterKey), "enter new owner key:", false);
+        }
+    }
+
+    function updateInvites() public {
+        AccMan(m_accman).invokeUpdateAccountPublicInvites(
+            m_account,
+            [m_ownerKey],
+            m_newOwners,
+            m_wallet,
+            m_sbHandle
+        );
+    }
+
+    function onUpdateAccountPublicInvites(Status result) external override {
+        Terminal.print(0, result == Status.Success ? "succeded" : "failed");
+        this.start();
     }
 
     function setOwnerKey(uint256 value) public {
         require(value != 0);
         m_ownerKey = value;
+        m_continue = tvm.functionId(accmanInvokeDeploy);
         getSigningBox();
     }
 
@@ -95,14 +156,12 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
 
     function setWalletAddress(address value) public {
         m_wallet = value;
-        if (m_ownerKey != 0) {
-            getSigningBox();
-        }
+        _start();
     }
 
     function setSigningBoxHandle(uint32 handle) public {
         m_sbHandle = handle;
-        accmanInvokeDeploy();
+        Terminal.print(m_continue, "");
     }
 
 
@@ -158,21 +217,20 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     }
 
     function getRequiredInterfaces() public view override returns (uint256[] interfaces) {
-        return [ Terminal.ID ];
+        return [ Terminal.ID, AddressInput.ID, UserInfo.ID ];
     }
 
     //
     // Private Helpers
     //
 
-    function _parseKey(string value) private returns (bool) {
+    function _parseKey(string value) private returns (uint256, bool) {
         (uint256 key, bool res) = stoi("0x" + value);
         if (!res) {
-            Terminal.print(tvm.functionId(Debot.start), "Invalid public key.");
-            return res;
+            Terminal.print(0, "Invalid public key.");
+            return (0, false);
         }
-        m_ownerKey = key;
-        return res;
+        return (key, res);
     }
 
 }
