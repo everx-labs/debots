@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-debot=0:09403116d2d04f3d86ab2de138b390f6ec1b0bc02363dbf006953946e807051e
+debot=0:c69a0ed4a11b467ec1a981f29139dc3ff6af47eeacd2cd93e67a6cfc6f771cfb
 debot_name=msigDebotv1
 
 if [ $# -eq 0 ]; then
@@ -41,6 +41,6 @@ fi
 
 PAYLOAD="${4:-\"\"}"
 
-tonos-cli run $debot getInvokeMessage "{\"sender\":\"0:0000000000000000000000000000000000000000000000000000000000000000\",\"recipient\":\"$1\",\"amount\":$2,\"bounce\":$3,\"payload\":$PAYLOAD}"  --abi $debot_name.abi.json \
+tonos-cli -u main.ton.dev run $debot getInvokeMessage "{\"sender\":\"0:0000000000000000000000000000000000000000000000000000000000000000\",\"recipient\":\"$1\",\"amount\":$2,\"bounce\":$3,\"payload\":$PAYLOAD}"  --abi $debot_name.abi.json \
     | grep message | cut -d '"' -f 4 | tr '/+' '_-' | tr -d '='
 
