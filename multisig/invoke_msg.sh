@@ -15,7 +15,7 @@ if [ $# -eq 0 ]; then
     echo "      PAYLOAD - optional, internal message body for recipient smart contract (BOC encoded as base64)"
     echo ""
     echo "EXAMPLE:"
-    echo "  ${0} 0:09403116d2d04f3d86ab2de138b390f6ec1b0bc02363dbf006953946e807051e 1000000000 true"
+    echo "  ${0} 0:c69a0ed4a11b467ec1a981f29139dc3ff6af47eeacd2cd93e67a6cfc6f771cfb 1000000000 true"
     exit 1
 fi
 
