@@ -9,13 +9,13 @@ Allows to manage wallet with multiple custodians.
 
 ## How to build
 
-    tondev sol compile msigDebotv1.sol
+    everdev sol compile msigDebotv1.sol
 
 ## How to deploy to TON OS SE
 
 Start TON OS SE
 
-    tondev se start
+    everdev se start
 
 Run script
 

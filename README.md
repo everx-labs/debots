@@ -8,6 +8,8 @@
   - [Basic terms](#basic-terms)
   - [DeBot interfaces](#debot-interfaces)
 - [Prerequisites](#prerequisites)
+    - [everdev](#everdev)
+    - [Tonos-cli](#tonos-cli)
 - [DeBots](#debots)
 - [How to try DeBot](#how-to-try-debot)
 - [Write your first DeBot](#write-your-first-debot)
@@ -22,6 +24,7 @@
     - [TON OS SE](#ton-os-se)
     - [DevNet](#devnet-1)
     - [Free TON](#free-ton-1)
+    - [DEBUG Mode](#debug-mode)
 - [Further Reading](#further-reading)
 
 # What is a DeBot?
@@ -62,12 +65,12 @@ Every DInterface must be discussed and accepted by DeBot Interface Specification
 
 # Prerequisites
 
-### tondev
+### everdev
 
-To build DeBots install [`tondev`](https://github.com/tonlabs/tondev):
+To build DeBots install [`everdev`](https://github.com/tonlabs/everdev):
 
 ```bash
-npm install -g tondev
+npm install -g everdev
 ```
 
 ### Tonos-cli
@@ -76,10 +79,10 @@ To run and debug debots install [`tonos-cli`](https://github.com/tonlabs/tonos-c
 
 Note: minimal required version >= 0.11.4.
 
-Install using `tondev`:
+Install using `everdev`:
 
 ```bash
-tondev tonos-cli install
+everdev tonos-cli install
 ```
 
 Or download binaries from here:
@@ -125,10 +128,10 @@ To use any additional interfaces, their source files have to be imported along w
 
 ## How to build DeBot
 
-DeBot can be built as any other smart contract using [`tondev`](https://github.com/tonlabs/tondev):
+DeBot can be built as any other smart contract using [`everdev`](https://github.com/tonlabs/everdev):
 
 ```bash
-tondev sol compile debot.sol
+everdev sol compile debot.sol
 ```
 
 ## How to deploy
@@ -137,7 +140,7 @@ tondev sol compile debot.sol
 
 Start [`TON OS SE`](https://docs.ton.dev/86757ecb2/p/19d886-ton-os-se):
 
-    `tondev se start`
+    `everdev se start`
 
 (docker required)
 
