@@ -4,14 +4,14 @@ Can be used as a template for new DeBots.
 
 ## How to build
 
-    tondev sol compile helloDebot.sol
+    everdev sol compile helloDebot.sol
 
 ## How to deploy to TON OS SE
 
 
 Start TON OS SE
 
-    tondev se start
+    everdev se start
 
 Deploy debot
 
