@@ -4,13 +4,13 @@ Helps to manage stakes in DePools v3.
 
 ## How to build
 
-    tondev sol compile depoolDebotv1.sol
+    everdev sol compile depoolDebotv1.sol
 
 ## How to deploy to TON OS SE
 
 Start TON OS SE
 
-    tondev se start
+    everdev se start
 
 Run script
 
@@ -20,7 +20,7 @@ Run script
 
 Instal tonos-cli:
 
-    tondev tonos-cli install
+    everdev tonos-cli install
 
 Run DeBot:
 
