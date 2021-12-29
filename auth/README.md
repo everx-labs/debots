@@ -29,7 +29,7 @@ This code is still experimental, do not use it in production.
 
 ## Prerequisites
 
-    npm, node.js ver>=14, tondev
+    npm, node.js ver>=14, everdev
 
 ## The quickest start (if you want to use DeBot  already deployed in net.ton.dev)
 

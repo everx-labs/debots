@@ -1,10 +1,10 @@
 ## Prerequisites
 
-Install `tondev` and `make`.
+Install `everdev` and `make`.
 
 Install `tonos-cli` (ver >= 0.13.1):
 
-    tondev tonos-cli install
+    everdev tonos-cli install
 
 ## How to compile
 
@@ -14,7 +14,7 @@ Install `tonos-cli` (ver >= 0.13.1):
 
 Start Node SE:
 
-    tondev se start
+    everdev se start
 
 Then run:
 

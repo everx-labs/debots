@@ -1,2 +1,2 @@
 #!/bin/bash
-tondev sol compile AuthDebot.sol && tondev js wrap AuthDebot.abi.json
+everdev sol compile AuthDebot.sol && everdev js wrap AuthDebot.abi.json

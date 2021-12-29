@@ -33,18 +33,18 @@ Open the link: https://uri.ton.surf/debot?address=0%3A73a7ba235ac26029574f0e053b
 
 npm, node.js ver>=14
 
-Install tondev globally
+Install everdev globally
 
 ```
-$ npm i tondev -g
-$ tondev tonos-cli install
+$ npm i everdev -g
+$ everdev tonos-cli install
 ```
 
 ### Compile
 
 ```
-$ tondev sol compile todo.sol
-$ tondev sol compile todoDebot.sol
+$ everdev sol compile todo.sol
+$ everdev sol compile todoDebot.sol
 ```
 
 ## How to deploy
@@ -52,7 +52,7 @@ $ tondev sol compile todoDebot.sol
 if you use TON OS SE:
 
 ```
-$ tondev se start
+$ everdev se start
 $ ./deploy_debot.sh todoDebot.tvc
 ```
 

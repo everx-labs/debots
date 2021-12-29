@@ -1,22 +1,22 @@
 all: AccBase Invite InviteRoot AccMan deployerDebot Account
 
 Account:
-	tondev sol compile Account.sol
+	everdev sol compile Account.sol
 
 AccBase: 
-	tondev sol compile AccBase.sol
+	everdev sol compile AccBase.sol
 
 Invite:
-	tondev sol compile Invite.sol
+	everdev sol compile Invite.sol
 
 InviteRoot:
-	tondev sol compile InviteRoot.sol
+	everdev sol compile InviteRoot.sol
 
 AccMan:
-	tondev sol compile AccMan.sol
+	everdev sol compile AccMan.sol
 
 deployerDebot:
-	tondev sol compile deployerDebot.sol
+	everdev sol compile deployerDebot.sol
 
 deploy: all
 	bash ./deploy_debot.sh
