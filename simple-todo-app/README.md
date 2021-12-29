@@ -9,24 +9,24 @@ This is an example of a simple TODO application. The application consists of two
 
  npm, node.js ver>=14
 
- Install tondev globally
+ Install everdev globally
  ```
- $ npm i tondev -g
+ $ npm i everdev -g
  ```
 
 ## How to build
 
   ```
-  $ tondev tonos-cli install
-  $ tondev sol compile todo.sol
-  $ tondev sol compile todoDebot.sol
+  $ everdev tonos-cli install
+  $ everdev sol compile todo.sol
+  $ everdev sol compile todoDebot.sol
   ```
 
 ## How to deploy
 
   if you use node SE: 
   ```
-  $ tondev se start
+  $ everdev se start
   $ ./deploy_contract.sh todo.tvc
   ```
   Remember this address, debot will ask it

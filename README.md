@@ -64,10 +64,10 @@ Download [`tonos-cli`](https://github.com/tonlabs/tonos-cli) version 0.8.1 or gr
 - `macos` [http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-darwin.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-darwin.zip)
 - `windows` [http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-windows.zip](http://sdkbinaries.tonlabs.io/tonos-cli-0_8_1-windows.zip)
 
-To build DeBots install [`tondev`](https://github.com/tonlabs/tondev):
+To build DeBots install [`everdev`](https://github.com/tonlabs/everdev):
 
 ```bash
-npm install -g tondev
+npm install -g everdev
 ```
 
 
@@ -108,19 +108,19 @@ To use any additional interfaces, their source files have to be imported along w
 
 ## How to build DeBot
 
-DeBot can be built as any other smart contract using [`tondev`](https://github.com/tonlabs/tondev):
+DeBot can be built as any other smart contract using [`everdev`](https://github.com/tonlabs/everdev):
 
 ```bash
-tondev sol compile debot.sol
+everdev sol compile debot.sol
 ```
 
 ## How to deploy
 
 ### Deploy to node SE
 
-Start [`node SE`](https://docs.ton.dev/86757ecb2/p/19d886-ton-os-se):
+Start [`TON OS SE`](https://docs.ton.dev/86757ecb2/p/19d886-ton-os-se):
 
-    `tondev se start`
+    `everdev se start`
 
 (docker required)
 

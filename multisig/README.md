@@ -9,19 +9,19 @@ Allows to manage wallet with multiple custodians.
 
 ## How to build
 
-    tondev sol compile msigDebotv1.sol
+    everdev sol compile msigDebotv1.sol
 
-## How to deploy to node SE
+## How to deploy to TON OS SE
 
-Start node SE
+Start TON OS SE
 
-    tondev se start
+    everdev se start
 
 Run script
 
     ./deploy_debot.sh
 
-## How to run in node SE
+## How to run in TON OS SE
 
     ./tonos-cli --url http://127.0.0.1 debot fetch <address>
 
