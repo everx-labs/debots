@@ -87,7 +87,7 @@ contract AccMan is Debot, Upgradable {
 
     /// @notice Entry point function for DeBot.
     function start() public override {
-        
+
     }
 
     /// @notice Returns Metadata about DeBot.
@@ -158,6 +158,7 @@ contract AccMan is Debot, Upgradable {
         m_invokeType = Invoke.QueryAccounts;
         m_invoker = msg.sender;
         m_ownerKey = ownerKey;
+        // FIXME Sdk.substring(tvm.functionId(uint32 callbackFunctionId), bytes str, uint32 start, uint32 count);
         Sdk.getAccountsDataByHash(
             tvm.functionId(setInvites),
             tvm.hash(buildInviteCode(InviteType.Self, _calcRoot())),
@@ -245,23 +246,23 @@ contract AccMan is Debot, Upgradable {
 
     /// @notice API function.
     function invokeRemoveInvites() public {
-        
+
     }
     */
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     function createPrivInvite() public {
         // TODO: check that nonce is valid;
         m_deployFlags |= CREATE_INVITE;
-        TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey, 
+        TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey,
             InviteType.Private, m_account, m_nonce, m_deployFlags);
         this.callMultisig(address(this), body, _calcFee(m_deployFlags, 1), tvm.functionId(completePrivInvite));
     }
 
     function createPubInvite() public {
         m_deployFlags |= CREATE_INVITE;
-        TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey, 
+        TvmCell body = tvm.encodeBody(AccMan.deployInvite, m_ownerKey,
             InviteType.Public, m_account, "", m_deployFlags);
         this.callMultisig(address(this), body, _calcFee(m_deployFlags, 1), tvm.functionId(completePubInvite));
     }
@@ -368,8 +369,8 @@ contract AccMan is Debot, Upgradable {
         }
         totalFee += _calcFee(m_deployFlags, ownerCount);
         TvmCell body = tvm.encodeBody(
-            AccMan.deployAccount, m_ownerKey, m_ownerKeys, m_currentSeqno, 
-            m_accountImage.toSlice().loadRef(), signature, m_args, 
+            AccMan.deployAccount, m_ownerKey, m_ownerKeys, m_currentSeqno,
+            m_accountImage.toSlice().loadRef(), signature, m_args,
             m_deployFlags
         );
         this.callMultisig(address(this), body, totalFee, tvm.functionId(checkAccount));
@@ -423,7 +424,6 @@ contract AccMan is Debot, Upgradable {
         // TODO: allow transfer only from multisig with 1 custodian.
         IMultisig(m_wallet).sendTransaction{
             abiVer: 2,
-            extMsg: true,
             sign: true,
             pubkey: pubkey,
             time: 0,
@@ -431,7 +431,7 @@ contract AccMan is Debot, Upgradable {
             signBoxHandle: sbhandle,
             callbackId: tvm.functionId(onSuccess),
             onErrorId: tvm.functionId(onError)
-        }(m_callArgs.dest, m_callArgs.value, true, 3, m_callArgs.payload);
+        }(m_callArgs.dest, m_callArgs.value, true, 3, m_callArgs.payload).extMsg;
         delete m_callArgs;
     }
 
@@ -620,7 +620,7 @@ contract AccMan is Debot, Upgradable {
         if (flags & CREATE_ROOT != 0) {
             deployInviteRoot(ownerKey);
         }
-        
+
         TvmCell rootImage = tvm.insertPubkey(m_inviteRootImage, ownerKey);
         address root = address(tvm.hash(rootImage));
         if (invType == InviteType.Public) {
@@ -655,7 +655,7 @@ contract AccMan is Debot, Upgradable {
     //
 
     function onCodeUpgrade() internal override {
-        
+
     }
 
 }

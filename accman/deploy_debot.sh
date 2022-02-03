@@ -1,5 +1,5 @@
+#!/usr/bin/env bash
 
-#!/bin/bash
 set -e
 
 tos=tonos-cli
