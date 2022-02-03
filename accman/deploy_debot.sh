@@ -24,7 +24,7 @@ echo GIVER $1 ------------------------------------------------
 giver $DEBOT_ADDRESS
 echo DEPLOY $1 -----------------------------------------------
 $tos --url $NETWORK deploy $1.tvc "{}" --sign $1.keys.json --abi $1.abi.json
-DEBOT_ABI=$(cat $1.abi.json | xxd -ps -c 20000)
+DEBOT_ABI=$(cat $1.abi.json | jq --compact-output | xxd -ps -c 20000)
 $tos --url $NETWORK call $DEBOT_ADDRESS setABI "{\"dabi\":\"$DEBOT_ABI\"}" --sign $1.keys.json --abi $1.abi.json
 echo -n $DEBOT_ADDRESS > $1.addr
 }
