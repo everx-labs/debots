@@ -41,7 +41,7 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
             MenuItem("Deploy new account", "", tvm.functionId(menuDeployAccount)),
             MenuItem("Show all your accounts", "", tvm.functionId(menuViewAccounts))
         ]);
-        
+
     }
 
     function menuViewAccounts(uint32 index) public {
@@ -164,13 +164,13 @@ contract DeployerDebot is Debot, IAccManCallbacks, IonQueryAccounts {
     //
 
     function _parseKey(string value) private returns (bool) {
-        (uint256 key, bool res) = stoi("0x" + value);
-        if (!res) {
+        optional(int) res = stoi("0x" + value);
+        if (!res.hasValue()) {
             Terminal.print(tvm.functionId(Debot.start), "Invalid public key.");
-            return res;
+            return false;
         }
-        m_ownerKey = key;
-        return res;
+        m_ownerKey = uint256(res.get());
+        return true;
     }
 
 }
