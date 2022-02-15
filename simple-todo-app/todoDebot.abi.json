@@ -1,0 +1,256 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "setTodoCode",
+			"inputs": [
+				{"name":"code","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onError",
+			"inputs": [
+				{"name":"sdkError","type":"uint32"},
+				{"name":"exitCode","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onSuccess",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "start",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getDebotInfo",
+			"id": "0xDEB",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"name","type":"string"},
+				{"name":"version","type":"string"},
+				{"name":"publisher","type":"string"},
+				{"name":"key","type":"string"},
+				{"name":"author","type":"string"},
+				{"name":"support","type":"address"},
+				{"name":"hello","type":"string"},
+				{"name":"language","type":"string"},
+				{"name":"dabi","type":"string"},
+				{"name":"icon","type":"bytes"}
+			]
+		},
+		{
+			"name": "getRequiredInterfaces",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"interfaces","type":"uint256[]"}
+			]
+		},
+		{
+			"name": "savePublicKey",
+			"inputs": [
+				{"name":"value","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "checkStatus",
+			"inputs": [
+				{"name":"acc_type","type":"int8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "creditAccount",
+			"inputs": [
+				{"name":"value","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onErrorRepeatCredit",
+			"inputs": [
+				{"name":"sdkError","type":"uint32"},
+				{"name":"exitCode","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "waitBeforeDeploy",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "checkIfStatusIs0",
+			"inputs": [
+				{"name":"acc_type","type":"int8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onErrorRepeatDeploy",
+			"inputs": [
+				{"name":"sdkError","type":"uint32"},
+				{"name":"exitCode","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setStat",
+			"inputs": [
+				{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"stat","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createTask",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createTask_",
+			"inputs": [
+				{"name":"value","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "showTasks",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "showTasks_",
+			"inputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"text","type":"string"},{"name":"createdAt","type":"uint64"},{"name":"isDone","type":"bool"}],"name":"tasks","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateTask",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateTask_",
+			"inputs": [
+				{"name":"value","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateTask__",
+			"inputs": [
+				{"name":"value","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deleteTask",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deleteTask_",
+			"inputs": [
+				{"name":"value","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "upgrade",
+			"inputs": [
+				{"name":"state","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getDebotOptions",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"options","type":"uint8"},
+				{"name":"debotAbi","type":"string"},
+				{"name":"targetAbi","type":"string"},
+				{"name":"targetAddr","type":"address"}
+			]
+		},
+		{
+			"name": "setABI",
+			"inputs": [
+				{"name":"dabi","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"m_options","type":"uint8"},
+		{"name":"m_debotAbi","type":"optional(string)"},
+		{"name":"m_targetAbi","type":"optional(string)"},
+		{"name":"m_target","type":"optional(address)"},
+		{"name":"m_icon","type":"bytes"},
+		{"name":"m_todoCode","type":"cell"},
+		{"name":"m_address","type":"address"},
+		{"components":[{"name":"completeCount","type":"uint32"},{"name":"incompleteCount","type":"uint32"}],"name":"m_stat","type":"tuple"},
+		{"name":"m_taskId","type":"uint32"},
+		{"name":"m_masterPubKey","type":"uint256"},
+		{"name":"m_msigAddress","type":"address"},
+		{"name":"INITIAL_BALANCE","type":"uint32"}
+	]
+}

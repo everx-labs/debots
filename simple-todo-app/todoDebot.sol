@@ -1,4 +1,4 @@
-pragma ton-solidity >=0.35.0;
+pragma ton-solidity >=0.57.0;
 pragma AbiHeader expire;
 pragma AbiHeader time;
 pragma AbiHeader pubkey;
@@ -80,7 +80,7 @@ contract TodoDebot is Debot, Upgradable {
         address support, string hello, string language, string dabi, bytes icon
     ) {
         name = "TODO DeBot";
-        version = "0.2.0";
+        version = "0.2.1";
         publisher = "TON Labs";
         key = "TODO list manager";
         author = "TON Labs";
@@ -96,9 +96,9 @@ contract TodoDebot is Debot, Upgradable {
     }
 
     function savePublicKey(string value) public {
-        (uint res, bool status) = stoi("0x"+value);
-        if (status) {
-            m_masterPubKey = res;
+        optional(int) res = stoi("0x"+value);
+        if (res.hasValue()) {
+            m_masterPubKey = uint(res.get());
 
             Terminal.print(0, "Checking if you already have a TODO list ...");
             TvmCell deployState = tvm.insertPubkey(m_todoCode, m_masterPubKey);
@@ -137,15 +137,13 @@ contract TodoDebot is Debot, Upgradable {
         optional(uint256) pubkey = 0;
         TvmCell empty;
         IMsig(m_msigAddress).sendTransaction{
-            abiVer: 2,
-            extMsg: true,
             sign: true,
             pubkey: pubkey,
             time: uint64(now),
             expire: 0,
             callbackId: tvm.functionId(waitBeforeDeploy),
             onErrorId: tvm.functionId(onErrorRepeatCredit)  // Just repeat if something went wrong
-        }(m_address, INITIAL_BALANCE, false, 3, empty);
+        }(m_address, INITIAL_BALANCE, false, 3, empty).extMsg;
     }
 
     function onErrorRepeatCredit(uint32 sdkError, uint32 exitCode) public {
@@ -227,30 +225,26 @@ contract TodoDebot is Debot, Upgradable {
     function createTask_(string value) public view {
         optional(uint256) pubkey = 0;
         ITodo(m_address).createTask{
-                abiVer: 2,
-                extMsg: true,
                 sign: true,
                 pubkey: pubkey,
                 time: uint64(now),
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess),
                 onErrorId: tvm.functionId(onError)
-            }(value);
+            }(value).extMsg;
     }
 
     function showTasks(uint32 index) public view {
         index = index;
         optional(uint256) none;
         ITodo(m_address).getTasks{
-            abiVer: 2,
-            extMsg: true,
             sign: false,
             pubkey: none,
             time: uint64(now),
             expire: 0,
             callbackId: tvm.functionId(showTasks_),
             onErrorId: 0
-        }();
+        }().extMsg;
     }
 
     function showTasks_( Task[] tasks ) public {
@@ -284,23 +278,21 @@ contract TodoDebot is Debot, Upgradable {
     }
 
     function updateTask_(string value) public {
-        (uint256 num,) = stoi(value);
-        m_taskId = uint32(num);
+        optional(int) num = stoi(value);
+        m_taskId = uint32(num.get());
         ConfirmInput.get(tvm.functionId(updateTask__),"Is this task completed?");
     }
 
     function updateTask__(bool value) public view {
         optional(uint256) pubkey = 0;
         ITodo(m_address).updateTask{
-                abiVer: 2,
-                extMsg: true,
                 sign: true,
                 pubkey: pubkey,
                 time: uint64(now),
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess),
                 onErrorId: tvm.functionId(onError)
-            }(m_taskId, value);
+            }(m_taskId, value).extMsg;
     }
 
 
@@ -315,32 +307,28 @@ contract TodoDebot is Debot, Upgradable {
     }
 
     function deleteTask_(string value) public view {
-        (uint256 num,) = stoi(value);
+        optional(int) num = stoi(value);
         optional(uint256) pubkey = 0;
         ITodo(m_address).deleteTask{
-                abiVer: 2,
-                extMsg: true,
                 sign: true,
                 pubkey: pubkey,
                 time: uint64(now),
                 expire: 0,
                 callbackId: tvm.functionId(onSuccess),
                 onErrorId: tvm.functionId(onError)
-            }(uint32(num));
+            }(uint32(num.get())).extMsg;
     }
 
     function _getStat(uint32 answerId) private view {
         optional(uint256) none;
         ITodo(m_address).getStat{
-            abiVer: 2,
-            extMsg: true,
             sign: false,
             pubkey: none,
             time: uint64(now),
             expire: 0,
             callbackId: answerId,
             onErrorId: 0
-        }();
+        }().extMsg;
     }
 
     function onCodeUpgrade() internal override {

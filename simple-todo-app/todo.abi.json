@@ -1,5 +1,6 @@
 {
 	"ABI version": 2,
+	"version": "2.2",
 	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
@@ -13,7 +14,7 @@
 		{
 			"name": "createTask",
 			"inputs": [
-				{"name":"text","type":"bytes"}
+				{"name":"text","type":"string"}
 			],
 			"outputs": [
 			]
@@ -40,7 +41,7 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"name":"id","type":"uint32"},{"name":"text","type":"bytes"},{"name":"createdAt","type":"uint64"},{"name":"isDone","type":"bool"}],"name":"tasks","type":"tuple[]"}
+				{"components":[{"name":"id","type":"uint32"},{"name":"text","type":"string"},{"name":"createdAt","type":"uint64"},{"name":"isDone","type":"bool"}],"name":"tasks","type":"tuple[]"}
 			]
 		},
 		{
@@ -55,5 +56,13 @@
 	"data": [
 	],
 	"events": [
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"m_count","type":"uint32"},
+		{"components":[{"name":"id","type":"uint32"},{"name":"text","type":"string"},{"name":"createdAt","type":"uint64"},{"name":"isDone","type":"bool"}],"name":"m_tasks","type":"map(uint32,tuple)"},
+		{"name":"m_ownerPubkey","type":"uint256"}
 	]
 }
