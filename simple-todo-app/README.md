@@ -9,14 +9,14 @@ This is an example of a simple TODO application. The application consists of two
 
 This DeBot is already deployed on blockchain
 
-### https://net.ever.live/
+### [Devnet](https://net.ever.live/)
 DeBot address: 0:20c3279225a285dfef71efe97f67e823513068b36e79d5fc669899389f89382f
 
 Open the link: [https://uri.ever.surf/debot/0:20c3279225a285dfef71efe97f67e823513068b36e79d5fc669899389f89382f?net=devnet](https://uri.ever.surf/debot/0:20c3279225a285dfef71efe97f67e823513068b36e79d5fc669899389f89382f?net=devnet)
 
 ![](../assets/net.everos.dev.png)
 
-### main https://ever.live
+### [Mainnet](https://ever.live)
 DeBot address: 0:73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36
 
 Open the link: [https://uri.ever.surf/debot/0:73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36](https://uri.ever.surf/debot/0:73a7ba235ac26029574f0e053b3f25ba4d536b8ba2c8dd5d10fb266c9035bc36)
