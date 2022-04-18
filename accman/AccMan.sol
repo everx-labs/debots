@@ -46,6 +46,8 @@ contract AccMan is Debot, Upgradable {
     mapping(uint256 => bool) m_ownerKeys;
     MultisigArgs m_callArgs;
     optional(uint256, bool) m_currOwner;
+    // Temp variable - accumulator for found accounts.
+    address[] m_addrs;
 
     // helper vars
     uint32 m_gotoId;
@@ -96,7 +98,7 @@ contract AccMan is Debot, Upgradable {
         address support, string hello, string language, string dabi, bytes icon
     ) {
         name = "Account Manager";
-        version = "0.2.0";
+        version = "0.3.0";
         publisher = "TON Labs";
         caption = "Managing user accounts";
         author = "TON Labs";
@@ -158,6 +160,7 @@ contract AccMan is Debot, Upgradable {
         m_invokeType = Invoke.QueryAccounts;
         m_invoker = msg.sender;
         m_ownerKey = ownerKey;
+        delete m_addrs;
         Sdk.getAccountsDataByHash(
             tvm.functionId(setInvites),
             tvm.hash(buildInviteCode(InviteType.Self, _calcRoot())),
@@ -290,12 +293,20 @@ contract AccMan is Debot, Upgradable {
         IonQueryPrivateInvites(m_invoker).onQueryPrivateInvites(addrs);
     }
 
-    function setInvites(AccData[] accounts) public view {
-        address[] addrs;
+    function setInvites(AccData[] accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
-            addrs.push(_decodeAccountAddress(accounts[i].data));
+            m_addrs.push(_decodeAccountAddress(accounts[i].data));
         }
-        IonQueryAccounts(m_invoker).onQueryAccounts(addrs);
+        
+        if (accounts.length != 0) {
+            Sdk.getAccountsDataByHash(
+                tvm.functionId(setInvites),
+                tvm.hash(buildInviteCode(InviteType.Self, _calcRoot())),
+                accounts[accounts.length - 1].id
+            );
+        } else {
+            IonQueryAccounts(m_invoker).onQueryAccounts(m_addrs);
+        }
     }
 
     function checkRoot() public {
@@ -385,7 +396,7 @@ contract AccMan is Debot, Upgradable {
         checkAccount();
     }
 
-    function checkHash(uint256 code_hash) public {
+    function checkHash(uint256 code_hash) public view {
         TvmCell accImage = buildAccount(m_ownerKey, m_currentSeqno);
         address addr = address(tvm.hash(accImage));
         if (code_hash == tvm.hash(accImage.toSlice().loadRef()) || code_hash == 0) {
@@ -395,7 +406,7 @@ contract AccMan is Debot, Upgradable {
         this.reportSuccess();
     }
 
-    function reportSuccess() public {
+    function reportSuccess() public view {
         returnOnDeployStatus(Status.Success, address(tvm.hash(buildAccount(m_ownerKey, m_currentSeqno))));
     }
 
@@ -649,13 +660,21 @@ contract AccMan is Debot, Upgradable {
     // Get-methods
     //
 
+    function getImages() public view returns (
+        TvmCell accountBaseImage, TvmCell inviteImage, TvmCell inviteRootImage
+    ) {
+        accountBaseImage = m_accountBaseImage;
+        inviteImage = m_inviteImage;
+        inviteRootImage = m_inviteRootImage;
+    }
+
 
     //
     // Upgradable Impl
     //
 
     function onCodeUpgrade() internal override {
-        
+        tvm.resetStorage();
     }
 
 }
