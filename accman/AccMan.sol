@@ -98,7 +98,7 @@ contract AccMan is Debot, Upgradable {
         address support, string hello, string language, string dabi, bytes icon
     ) {
         name = "Account Manager";
-        version = "0.3.0";
+        version = "0.3.1";
         publisher = "TON Labs";
         caption = "Managing user accounts";
         author = "TON Labs";
@@ -668,7 +668,9 @@ contract AccMan is Debot, Upgradable {
         inviteRootImage = m_inviteRootImage;
     }
 
-
+    function getInviteCodeHash(uint256 userKey) public view returns (uint256 codeHash) {
+        return tvm.hash(buildInviteCode(InviteType.Self, _calcRootByKey(userKey)));
+    }
     //
     // Upgradable Impl
     //
