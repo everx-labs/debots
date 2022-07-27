@@ -1,19 +1,19 @@
 all: AccBase Invite InviteRoot AccMan deployerDebot Account
 
 Account:
-	everdev sol compile Account.sol
+	tondev sol compile Account.sol
 
 AccBase: 
-	everdev sol compile AccBase.sol
+	tondev sol compile AccBase.sol
 
 Invite:
-	everdev sol compile Invite.sol
+	tondev sol compile Invite.sol
 
 InviteRoot:
-	everdev sol compile InviteRoot.sol
+	tondev sol compile InviteRoot.sol
 
 AccMan:
-	everdev sol compile AccMan.sol
+	tondev sol compile AccMan.sol
 
 deployerDebot:
 	everdev sol compile deployerDebot.sol
@@ -26,3 +26,9 @@ run:
 
 debug:
 	tonos-cli --url http://127.0.0.1 debot --debug fetch `cat deployerDebot.addr`
+
+updaccman: AccMan
+	UPDATE=true ./update.sh net.ton.dev
+
+images:
+	tonos-cli run `cat AccMan.addr` getImages {} --abi AccMan.abi.json
